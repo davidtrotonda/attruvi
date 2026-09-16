@@ -43,11 +43,6 @@ const faqs = [
       "Attruvi es un proyecto de atribución móvil de código abierto para aplicaciones React Native. Su objetivo es unir anuncios, instalaciones, compras, ingresos y retención en una misma lectura.",
   },
   {
-    question: "¿Sustituye a AppsFlyer o Adjust?",
-    answer:
-      "El objetivo inicial es cubrir el núcleo que más importa a equipos pequeños: atribución, eventos, ingresos, retención y envío de conversiones a las redes publicitarias. No pretende copiar desde el primer día todas las funciones empresariales de esas plataformas.",
-  },
-  {
     question: "¿Funciona con iOS y Android?",
     answer:
       "Está diseñado para proyectos React Native en ambas plataformas. La implementación respetará las limitaciones de privacidad y atribución propias de iOS y Android.",
@@ -427,11 +422,33 @@ function Metric({ label, value, delta }: { label: string; value: string; delta: 
 function AttributionVisual() {
   return (
     <div className="attribution-visual">
-      <div className="source-node">META<span>Campaña 04</span></div>
-      <div className="flow-line"><i /></div>
-      <div className="user-node"><span>U</span><small>Usuario 8F2</small></div>
-      <div className="flow-line"><i /></div>
-      <div className="value-node">+49,90 €<span>Compra atribuida</span></div>
+      <div className="attribution-head">
+        <span>RECORRIDO #8F2</span>
+        <strong><i /> 3 señales enlazadas</strong>
+      </div>
+      <div className="attribution-flow">
+        <div className="journey-node ad-journey-node">
+          <span className="journey-icon">M</span>
+          <div><strong>Meta Ads</strong><small>Campaña 04</small></div>
+          <em>clic</em>
+        </div>
+        <div className="journey-link link-install"><span>00:02</span><i /><i /></div>
+        <div className="journey-node install-journey-node">
+          <span className="phone-glyph"><i /></span>
+          <div><strong>Instalación</strong><small>iOS · usuario 8F2</small></div>
+          <em>match</em>
+        </div>
+        <div className="journey-link link-purchase"><span>00:14</span><i /><i /></div>
+        <div className="journey-node purchase-journey-node">
+          <span className="journey-icon">€</span>
+          <div><strong>49,90 €</strong><small>Compra atribuida</small></div>
+          <em>ROAS 4,82×</em>
+        </div>
+      </div>
+      <div className="attribution-foot">
+        <span><i /> Atribución confirmada</span>
+        <strong>Meta → iOS → purchase</strong>
+      </div>
     </div>
   );
 }
@@ -454,12 +471,27 @@ function RetentionVisual() {
 function SignalVisual() {
   return (
     <div className="signal-visual">
-      <div className="event-pill"><i /> purchase_verified</div>
-      <div className="signal-lines"><i /><i /><i /></div>
-      <div className="network-row">
-        <span>G</span><span>M</span><span>T</span>
+      <div className="dispatch-head">
+        <span className="event-pill"><i /> purchase_verified</span>
+        <small>evento #8042</small>
       </div>
-      <div className="sent-row"><span>Enviado</span><span>Enviado</span><span>Enviado</span></div>
+      <div className="dispatch-core">
+        <span><i /> API</span>
+        <strong>POSTBACK</strong>
+        <small>Enviando señal verificada</small>
+      </div>
+      <div className="dispatch-bus"><i /><i /><i /></div>
+      <div className="network-grid">
+        <div className="network-card google-card">
+          <b>G</b><span>Google</span><small><i /> 200 OK</small><em>128 ms</em>
+        </div>
+        <div className="network-card meta-card">
+          <b>M</b><span>Meta</span><small><i /> Recibido</small><em>96 ms</em>
+        </div>
+        <div className="network-card tiktok-card">
+          <b>T</b><span>TikTok</span><small><i /> Enviado</small><em>141 ms</em>
+        </div>
+      </div>
     </div>
   );
 }
