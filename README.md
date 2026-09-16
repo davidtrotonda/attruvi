@@ -27,9 +27,21 @@ npm run dev
 
 Abre `http://localhost:3000`.
 
-## Estructura prevista
+## Estructura
 
-El repositorio evolucionará hacia un monorepo con el SDK de React Native, la API de atribución, el panel y los conectores publicitarios.
+- La landing Next.js permanece en `src/app` y se despliega en Vercel.
+- `packages/core` contiene contratos y validación compartida.
+- `packages/react-native` es la base del SDK público.
+- `packages/connectors` define la interfaz de redes publicitarias.
+- `workers/links` y `workers/ingest` son Workers de Cloudflare.
+- `supabase` contiene migraciones, seeds y pruebas pgTAP reproducibles.
+
+```bash
+npm install
+npm run verify
+```
+
+La arquitectura y el estado real están en `docs/ARCHITECTURE.md` y `docs/BUILD_STATUS.md`.
 
 ## Licencia
 

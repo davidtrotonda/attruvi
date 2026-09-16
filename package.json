@@ -2,11 +2,20 @@
   "name": "attruvi",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "workers/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint src packages workers scripts next.config.ts eslint.config.mjs",
+    "build:workspaces": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors && npm run build -w @attruvi/react-native && npm run build -w @attruvi/worker-links && npm run build -w @attruvi/worker-ingest",
+    "build:all": "npm run build && npm run build:workspaces",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build:all"
   },
   "dependencies": {
     "next": "16.3.5",
@@ -14,13 +23,24 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.1.11",
+    "@cloudflare/workers-types": "5.20260916.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
+    "supabase": "2.117.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "4.1.11",
+    "wrangler": "4.133.0"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true,
+    "esbuild@0.28.1": true,
+    "workerd@1.20260815.1": true,
+    "workerd@1.20260916.1": true
   }
 }

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,6 +13,7 @@
 
 # testing
 /coverage
+**/coverage
 
 # next.js
 /.next/
@@ -36,6 +38,15 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# Cloudflare Workers
+**/.wrangler/
+**/dist/
+.dev.vars
+
+# Supabase local runtime
+supabase/.branches/
+supabase/.temp/
 
 # typescript
 *.tsbuildinfo

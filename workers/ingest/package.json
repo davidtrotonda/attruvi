@@ -1,0 +1,15 @@
+{
+  "name": "@attruvi/worker-ingest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "types": "wrangler types --include-runtime false"
+  },
+  "dependencies": {
+    "@attruvi/core": "0.1.0"
+  }
+}
