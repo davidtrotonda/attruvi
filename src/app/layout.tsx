@@ -1,0 +1,38 @@
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://attruvi.com"),
+  title: "Attruvi — Atribución móvil de código abierto",
+  description:
+    "Conecta anuncios con instalaciones, compras e ingresos en React Native y envía mejores señales a Google Ads, Meta Ads y TikTok Ads.",
+  applicationName: "Attruvi",
+  keywords: [
+    "atribución móvil",
+    "React Native",
+    "Google Ads",
+    "Meta Ads",
+    "TikTok Ads",
+    "open source",
+  ],
+  icons: { icon: "/favicon.svg" },
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}
