@@ -2,6 +2,8 @@
 
 Attruvi es un proyecto de atribución móvil de código abierto para aplicaciones React Native.
 
+Web: [attruvi.com](https://attruvi.com)
+
 El objetivo es conectar campañas publicitarias con instalaciones, compras, ingresos y retención, y devolver conversiones válidas a Google Ads, Meta Ads y TikTok Ads.
 
 > Estado: primera etapa pública. Todavía no está listo para producción.

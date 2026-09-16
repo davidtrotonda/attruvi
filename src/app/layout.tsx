@@ -13,7 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://attruvi.com"),
+  metadataBase: new URL("https://www.attruvi.com"),
+  alternates: { canonical: "/" },
   title: "Attruvi — Atribución móvil de código abierto",
   description:
     "Conecta anuncios con instalaciones, compras e ingresos en React Native y envía mejores señales a Google Ads, Meta Ads y TikTok Ads.",
