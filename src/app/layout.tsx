@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     "TikTok Ads",
     "open source",
   ],
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: "/favicon.png", apple: "/favicon.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

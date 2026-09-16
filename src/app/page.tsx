@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const githubUrl =
   process.env.NEXT_PUBLIC_GITHUB_URL ?? "https://github.com/davidtrotonda/attruvi";
 
@@ -389,7 +391,7 @@ function ProductDemo() {
             <svg viewBox="0 0 760 150" role="img" aria-label="Gráfico ascendente de ingresos atribuidos">
               <defs>
                 <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#5b5cf0" stopOpacity=".28" />
+                  <stop offset="0%" stopColor="#ff5a1f" stopOpacity=".28" />
                   <stop offset="100%" stopColor="#5b5cf0" stopOpacity="0" />
                 </linearGradient>
               </defs>
@@ -481,11 +483,15 @@ function RepoRow({ icon, name, detail }: { icon: string; name: string; detail: s
 
 function LogoMark() {
   return (
-    <svg className="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
-      <path d="M5 24.5 14.1 5h4.2L27 24.5h-6.1l-1.6-4H12l-1.7 4H5Z" fill="currentColor" />
-      <path d="m13.7 15.7 2-5 2 5h-4Z" fill="white" />
-      <circle cx="24.4" cy="8.2" r="3.2" fill="#22d3a6" />
-    </svg>
+    <Image
+      className="logo-mark"
+      src="/attruvi-logo.png"
+      alt=""
+      width={64}
+      height={64}
+      aria-hidden="true"
+      priority
+    />
   );
 }
 
