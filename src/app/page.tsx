@@ -67,14 +67,6 @@ const faqs = [
 export default function Home() {
   return (
     <main>
-      <div className="announcement">
-        <span className="announcement-dot" />
-        <span>Attruvi está naciendo en abierto para React Native</span>
-        <a href={githubUrl} target="_blank" rel="noreferrer">
-          Seguir el desarrollo <ArrowIcon />
-        </a>
-      </div>
-
       <header className="site-header">
         <a className="brand" href="#inicio" aria-label="Attruvi, inicio">
           <LogoMark />
@@ -97,21 +89,25 @@ export default function Home() {
         </a>
       </header>
 
-      <section className="hero grid-surface" id="inicio">
-        <div className="hero-orbit orbit-one" aria-hidden="true">
-          <span>install</span>
-        </div>
-        <div className="hero-orbit orbit-two" aria-hidden="true">
-          <span>purchase</span>
-        </div>
-        <div className="hero-orbit orbit-three" aria-hidden="true">
-          <span>revenue</span>
+      <section className="hero" id="inicio">
+        <div className="hero-grid-ambient" aria-hidden="true">
+          <div className="hero-spark hero-spark-left">✦</div>
+          <div className="hero-spark hero-spark-right">✦</div>
+          <div className="pixel-field pixel-field-left">
+            {Array.from({ length: 16 }).map((_, index) => <i key={index} />)}
+          </div>
+          <div className="pixel-field pixel-field-right">
+            {Array.from({ length: 12 }).map((_, index) => <i key={index} />)}
+          </div>
+          <i className="grid-runner runner-one" />
+          <i className="grid-runner runner-two" />
+          <span className="ambient-code ambient-code-left">[ ATTRIBUTION ]</span>
+          <span className="ambient-code ambient-code-right">[ POSTBACK ]</span>
         </div>
         <div className="hero-content">
-          <div className="pill reveal reveal-1">
-            <span className="status-dot" />
+          <p className="hero-eyebrow reveal reveal-1">
             Atribución móvil de código abierto
-          </div>
+          </p>
           <h1 className="reveal reveal-2">
             De cada anuncio al
             <span> valor real.</span>
@@ -379,6 +375,15 @@ function ProductDemo() {
           <div className="demo-heading-row">
             <div><small>RENDIMIENTO · 30 DÍAS</small><strong>¿Qué anuncios generan valor?</strong></div>
             <span className="demo-filter">Todas las campañas⌄</span>
+          </div>
+          <div className="demo-signal-strip" aria-label="Recorrido de una conversión atribuida">
+            <span><i /> Clic de Meta</span>
+            <b>→</b>
+            <span>Instalación</span>
+            <b>→</b>
+            <span>Compra 49,90 €</span>
+            <b>→</b>
+            <span className="signal-sent">Postback enviado</span>
           </div>
           <div className="metric-row">
             <Metric label="Ingresos atribuidos" value="48.290 €" delta="+18,4%" />
