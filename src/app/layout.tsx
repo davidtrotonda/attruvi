@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   title: "Attruvi — Atribución móvil de código abierto",
   description:
-    "Conecta anuncios con instalaciones, compras e ingresos en React Native y envía mejores señales a Google Ads, Meta Ads y TikTok Ads.",
+    "Descubre qué anuncios generan instalaciones, compras e ingresos en React Native y envía conversiones verificadas a Google Ads, Meta Ads y TikTok Ads.",
   applicationName: "Attruvi",
   keywords: [
     "atribución móvil",

@@ -101,16 +101,17 @@ export default function Home() {
         </div>
         <div className="hero-content">
           <p className="hero-eyebrow reveal reveal-1">
-            Atribución móvil de código abierto
+            Atribución móvil para React Native
           </p>
           <h1 className="reveal reveal-2">
-            De cada anuncio al
-            <span> valor real.</span>
+            Mide qué anuncios convierten.
+            <span> Mejora tus resultados.</span>
           </h1>
           <p className="hero-copy reveal reveal-3">
-            Attruvi conecta anuncios con instalaciones, compras e ingresos. Y
-            envía las conversiones a Google, Meta y TikTok para que tus campañas
-            aprendan con mejores señales.
+            Attruvi conecta cada instalación, compra e ingreso con el anuncio que
+            lo generó. Después envía conversiones verificadas a Google Ads, Meta
+            Ads y TikTok Ads para optimizar tus campañas y reducir el coste por
+            resultado.
           </p>
           <div className="hero-actions reveal reveal-4">
             <a
