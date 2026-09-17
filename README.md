@@ -31,7 +31,7 @@ Abre `http://localhost:3000`.
 
 - La landing Next.js permanece en `src/app` y se despliega en Vercel.
 - `packages/core` contiene contratos y validación compartida.
-- `packages/react-native` es la base del SDK público.
+- `packages/react-native` contiene el SDK público instalable `@attruvi/react-native`; su guía incluye instalación humana y un prompt para asistentes de código.
 - `packages/connectors` define la interfaz de redes publicitarias.
 - `workers/links` y `workers/ingest` son Workers de Cloudflare.
 - `supabase` contiene migraciones, seeds y pruebas pgTAP reproducibles.
@@ -44,6 +44,8 @@ npm run verify
 La arquitectura y el estado real están en `docs/ARCHITECTURE.md` y `docs/BUILD_STATUS.md`.
 
 La configuración de Supabase Auth, Google OAuth y sus URLs de retorno está en `docs/AUTH_SETUP.md`.
+
+La instalación y compatibilidad del SDK están en `packages/react-native/README.md` y `docs/SDK_COMPATIBILITY.md`.
 
 ## Licencia
 

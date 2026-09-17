@@ -19,6 +19,10 @@ Actualizado: 2026-09-17.
 - Worker de enlaces completo con redirect HTTP inmediato, KV, Queue, RPC de resolución, Play Install Referrer, AASA/assetlinks, bots, deduplicación y adaptador local.
 - Auditoría de licencia/arquitectura de Link My App e implementación nueva sin copiar sus datos o acoplamientos.
 - Documentación de arquitectura, taxonomía, modelo de datos, particionado, retención y rollback.
+- SDK abierto `@attruvi/react-native` con la API pública completa, identificadores seguros nativos, consentimiento, sesiones automáticas, cola offline, lotes, backoff con jitter, idempotencia, deep links y Play Install Referrer.
+- Módulo autovinculable en Kotlin/Swift, compatible por peer range con React Native 0.86.3–0.87.x y cargado por `TurboModuleRegistry` mediante la interoperabilidad de New Architecture.
+- App aislada basada en la plantilla oficial React Native 0.87 con botones de instalación simulada, registro, compra y suscripción.
+- Guías humanas y prompt breve para Codex/ChatGPT/Claude, incluida la limitación real de Expo Go.
 
 ## Verificación disponible
 
@@ -27,13 +31,15 @@ Actualizado: 2026-09-17.
 - `npm run test:web`: registro, verificación, contraseña incorrecta, recuperación, Google OAuth simulado, callback seguro y clasificación de rutas privadas.
 - `npm run test:db`: aislamiento RLS e invariantes en Postgres local; necesita `supabase start` y Docker.
 
-En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 14 pruebas web, 19 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js y ambos Workers. El build incluye `/dashboard/apps` y `/dashboard/links`; el Worker de enlaces supera redirects iOS/Android/web, Unicode, Install Referrer, destinos ausentes, enlaces no disponibles, bots, deduplicación, abuso, latencia local y asociaciones nativas. En navegador se comprobó que una visita anónima a `/dashboard/links` vuelve a la landing y abre el diálogo de acceso con `next` seguro.
+En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 14 pruebas web, 28 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El build incluye `/dashboard/apps` y `/dashboard/links`; el Worker de enlaces supera redirects iOS/Android/web, Unicode, Install Referrer, destinos ausentes, enlaces no disponibles, bots, deduplicación, abuso, latencia local y asociaciones nativas. En navegador se comprobó que una visita anónima a `/dashboard/links` vuelve a la landing y abre el diálogo de acceso con `next` seguro.
 
 La suite pgTAP se amplió a 16 assertions para las RPC, slugs reservados y reintentos de Queue. `npm run test:db` no pudo conectarse a `127.0.0.1:54322` porque Supabase local/Docker no está iniciado; no se considera validada en PostgreSQL hasta ejecutar `npx supabase start` y repetirla.
 
+La fase del SDK superó TypeScript estricto con los tipos de React Native 0.87, 9 pruebas unitarias y `npm pack`. El tarball generado se instaló en una app limpia RN 0.87 con `newArchEnabled=true`; el autolinking detectó Android e iOS. La compilación Android no pudo ejecutarse porque este equipo no tiene JDK ni Android SDK, y la compilación iOS requiere macOS/Xcode.
+
 ## Pendiente de fases posteriores
 
-- Implementación nativa del SDK React Native.
+- Persistencia real y autenticación de appKey en el Worker de ingestión; actualmente valida el contrato y fija `receivedAt`.
 - Credenciales y APIs de Google Ads, Meta Ads y TikTok Ads.
 - Atribución, métricas y postbacks en producción.
 
@@ -46,3 +52,4 @@ Nada de lo anterior se presenta como funcional hasta que se implemente y verifiq
 - Añadir las variables públicas de Supabase a los entornos de Vercel. No se requieren secretos de Google en el navegador.
 - Crear KV/Queues, configurar los tres secretos del Worker y asociar el dominio de enlaces siguiendo `docs/SMART_LINKS_CLOUDFLARE.md`.
 - Añadir las asociaciones reales de cada app a `association-config.ts` y comprobar Universal Links/App Links en dispositivos.
+- Compilar la app de ejemplo en Android y iOS en un host con JDK/Android SDK y Xcode, respectivamente.

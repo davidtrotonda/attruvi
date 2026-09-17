@@ -55,3 +55,15 @@ Estado: aceptada. El Worker nunca sirve una pantalla intermedia. Universal Links
 ## ADR-014 — Hashes minimizados para control de abuso
 
 Estado: aceptada. La deduplicación temporal necesita una señal estable, pero no justifica persistir IP o `User-Agent`. El Worker reduce la IP a prefijo, aplica un salt secreto y SHA-256 a prefijo y agente, limita la ventana a 20 segundos y marca bots/pruebas sin incluirlos en los contadores principales.
+
+## ADR-015 — Compatibilidad SDK guiada por las apps reales
+
+Estado: aceptada. El rango inicial es React Native `>=0.86.3 <0.88`: Tourixy usa 0.87.0 y Solsuna/Rutimon usan 0.86.3 sobre Expo 57. No se afirma compatibilidad fuera del rango probado. El paquete hereda versiones nativas del host y mantiene Android 24/iOS 15.1 como mínimos de fallback.
+
+## ADR-016 — Identidad segura y analítica bajo consentimiento
+
+Estado: aceptada. `installation_id`, `anonymous_id` e identidad viven en Keychain o EncryptedSharedPreferences. La cola solo empieza con consentimiento `granted`; denegarlo elimina cola, identidad y atribución. El SDK no lee IDFA/AAID, rechaza correo/teléfono como `userId` y aplica allowlist más redacción de PII a propiedades.
+
+## ADR-017 — Interoperabilidad New Architecture sin acoplar las apps
+
+Estado: aceptada. El módulo Kotlin/Swift se autovincula y se resuelve con `TurboModuleRegistry`; React Native lo adapta mediante su capa oficial de interoperabilidad. Así no se modifican `MainApplication` ni `AppDelegate` y se mantiene Swift como implementación iOS. Se migrará a un TurboModule Codegen directo cuando Swift pueda consumir la interfaz generada sin un adaptador Objective-C++ adicional.

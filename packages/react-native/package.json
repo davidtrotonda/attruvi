@@ -1,31 +1,51 @@
 {
   "name": "@attruvi/react-native",
   "version": "0.1.0",
-  "private": true,
+  "description": "SDK abierto de atribución y eventos para aplicaciones React Native",
+  "license": "MIT",
+  "private": false,
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "react-native": "./dist/index.native.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+      "react-native": "./dist/index.native.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
+  "files": [
+    "android",
+    "dist",
+    "ios",
+    "src",
+    "AttruviReactNative.podspec",
+    "LICENSE",
+    "README.md",
+    "react-native.config.cjs"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "@attruvi/core": "0.1.0"
+    "test": "vitest run",
+    "prepack": "npm run build",
+    "pack:check": "node ./scripts/check-pack.mjs"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "react-native": ">=0.76"
+    "@react-native-async-storage/async-storage": ">=2.2.0 <4",
+    "react": ">=19.1.0 <20",
+    "react-native": ">=0.86.3 <0.88"
   },
-  "peerDependenciesMeta": {
-    "react-native": {
-      "optional": true
-    }
+  "devDependencies": {
+    "@react-native-async-storage/async-storage": "3.1.1",
+    "react": "19.2.8",
+    "react-native": "0.87.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

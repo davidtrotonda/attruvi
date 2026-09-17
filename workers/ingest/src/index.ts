@@ -1,4 +1,4 @@
-import { eventBatchSchema } from "@attruvi/core";
+import { eventBatchSchema, sdkEventBatchSchema } from "@attruvi/core";
 
 function json(body: unknown, status = 200): Response {
   return Response.json(body, {
@@ -21,9 +21,15 @@ export default {
           return json({ code: "payload_too_large" }, 413);
         }
 
-        const parsed = eventBatchSchema.safeParse(await request.json());
+        const body = await request.json();
+        const isSdkBatch = typeof body === "object" && body !== null && "sdkVersion" in body;
+        const parsed = (isSdkBatch ? sdkEventBatchSchema : eventBatchSchema).safeParse(body);
         if (!parsed.success) {
           return json({ code: "invalid_event_batch" }, 400);
+        }
+
+        if (isSdkBatch && !/^attruvi_[A-Za-z0-9_-]{8,}$/.test(request.headers.get("x-attruvi-app-key") ?? "")) {
+          return json({ code: "invalid_app_key" }, 401);
         }
 
         return json(
@@ -31,6 +37,7 @@ export default {
             status: "validated",
             batchId: parsed.data.batchId,
             accepted: parsed.data.events.length,
+            receivedAt: new Date().toISOString(),
           },
           202,
         );

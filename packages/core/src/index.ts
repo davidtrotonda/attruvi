@@ -133,6 +133,66 @@ export const eventBatchSchema = z
   })
   .strict();
 
+const sdkJsonPrimitiveSchema = z.union([z.string(), z.number().finite(), z.boolean(), z.null()]);
+type SdkJsonValue = z.infer<typeof sdkJsonPrimitiveSchema> | SdkJsonValue[] | { [key: string]: SdkJsonValue };
+const sdkJsonValueSchema: z.ZodType<SdkJsonValue> = z.lazy(() =>
+  z.union([sdkJsonPrimitiveSchema, z.array(sdkJsonValueSchema), z.record(z.string(), sdkJsonValueSchema)]),
+);
+
+export const sdkAttributionSchema = z
+  .object({
+    method: z.enum(["direct_link", "install_referrer"]),
+    capturedAt: utcDateTimeSchema,
+    clickId: z.string().min(1).max(1024).optional(),
+    source: z.string().min(1).max(1024).optional(),
+    medium: z.string().min(1).max(1024).optional(),
+    campaign: z.string().min(1).max(1024).optional(),
+    content: z.string().min(1).max(1024).optional(),
+    term: z.string().min(1).max(1024).optional(),
+    campaignId: z.string().min(1).max(1024).optional(),
+    adGroupId: z.string().min(1).max(1024).optional(),
+    adId: z.string().min(1).max(1024).optional(),
+    gclid: z.string().min(1).max(1024).optional(),
+    gbraid: z.string().min(1).max(1024).optional(),
+    wbraid: z.string().min(1).max(1024).optional(),
+    fbclid: z.string().min(1).max(1024).optional(),
+    ttclid: z.string().min(1).max(1024).optional(),
+    deepLinkPath: z.string().min(1).max(1024).optional(),
+  })
+  .strict();
+
+export const sdkEventEnvelopeSchema = z
+  .object({
+    eventId: eventIdSchema,
+    installationId: installationIdSchema,
+    anonymousId: z.uuid(),
+    sessionId: z.uuid(),
+    name: z.string().regex(/^[A-Za-z][A-Za-z0-9_.-]{0,79}$/),
+    occurredAt: utcDateTimeSchema,
+    idempotencyKey: z.string().min(8).max(255),
+    properties: z.record(z.string(), sdkJsonValueSchema),
+  })
+  .strict();
+
+export const sdkEventBatchSchema = z
+  .object({
+    batchId: z.uuid(),
+    sentAt: utcDateTimeSchema,
+    environment: z.enum(["development", "staging", "production"]),
+    platform: z.enum(["ios", "android"]),
+    sdkVersion: z.string().min(1).max(64),
+    identity: z
+      .object({
+        userId: z.string().min(1).max(255),
+        traits: z.record(z.string(), sdkJsonValueSchema),
+      })
+      .strict()
+      .optional(),
+    attribution: sdkAttributionSchema.optional(),
+    events: z.array(sdkEventEnvelopeSchema).min(1).max(100),
+  })
+  .strict();
+
 export const attributionSchema = z
   .object({
     id: attributionIdSchema,
@@ -164,6 +224,8 @@ export const postbackSchema = z
 
 export type EventEnvelope = z.output<typeof eventEnvelopeSchema>;
 export type EventBatch = z.output<typeof eventBatchSchema>;
+export type SdkEventEnvelope = z.output<typeof sdkEventEnvelopeSchema>;
+export type SdkEventBatch = z.output<typeof sdkEventBatchSchema>;
 export type Attribution = z.output<typeof attributionSchema>;
 export type Postback = z.output<typeof postbackSchema>;
 

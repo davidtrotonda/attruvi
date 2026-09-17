@@ -25,7 +25,7 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 |---|---|---|
 | Next.js raíz | Landing, panel autenticado, gestión de apps y constructor de enlaces | Guardar secretos de red en el navegador |
 | `packages/core` | IDs opacos, contratos y validación compartida | Depender del DOM o de React Native |
-| `packages/react-native` | Superficie pública del futuro SDK | Contener una clave de servidor |
+| `packages/react-native` | SDK público: identidad segura, consentimiento, sesiones, atribución, cola offline y entrega por lotes | Contener una clave de servidor o recopilar IDFA/AAID sin permiso |
 | `packages/connectors` | Contratos normalizados para gasto publicitario | Inventar resultados cuando falten credenciales |
 | `workers/links` | Resolver enlaces desde KV/Supabase, producir clics en Queue y redirigir | Mostrar una página intermedia o guardar IP/UA en claro |
 | `workers/ingest` | Validar lotes del SDK antes de persistirlos | Confiar en `organization_id` del dispositivo |
@@ -48,7 +48,7 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 4. Los jobs se reclaman con `FOR UPDATE SKIP LOCKED`; una llamada externa nunca mantiene abierta la transacción.
 5. Los errores recuperables pasan a reintento con backoff; los permanentes quedan auditados y visibles.
 
-El Worker de enlaces ya resuelve destinos reales mediante una RPC exclusiva de `service_role`, sirve AASA/assetlinks y persiste lotes idempotentes desde Queue. El Worker de ingestión sigue siendo una base contractual: la implementación del SDK y el pipeline de eventos pertenecen a la fase siguiente. Los bindings y secretos de producción se mantienen pendientes de configuración externa.
+El Worker de enlaces ya resuelve destinos reales mediante una RPC exclusiva de `service_role`, sirve AASA/assetlinks y persiste lotes idempotentes desde Queue. El SDK React Native ya produce el contrato público completo y el Worker de ingestión lo valida, exige una appKey con formato correcto y fija `receivedAt`. La autenticación criptográfica de esa appKey y la persistencia transaccional de los eventos siguen siendo la siguiente frontera del pipeline.
 
 ## Flujo específico de un enlace
 
