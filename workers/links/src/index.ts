@@ -59,6 +59,9 @@ function createCloudflareRuntime(env: Env): LinkRuntime {
       await env.LINKS_KV.put(key, "1", { expirationTtl: 60 });
       return false;
     },
+    async releaseDuplicate(dedupeKey) {
+      await env.LINKS_KV.delete(`${dedupeCachePrefix}${dedupeKey}`);
+    },
     now: () => new Date(),
     async resolveLink(slug) {
       const key = `${linkCachePrefix}${slug}`;

@@ -186,3 +186,11 @@ Estado: aceptada. Los plazos por app borran detalles del debugger y seudonimizan
 ## ADR-045 — Operaciones administrativas resistentes a replay
 
 Estado: aceptada. OAuth usa un estado aleatorio cuyo SHA-256 se registra con usuario/app/proveedor y se consume una sola vez. La purga KV exige bearer, HMAC del cuerpo, timestamp de cinco minutos y nonce almacenado diez minutos. Los eventos del SDK mantienen replay idempotente por `event_id`, idempotency key y transacción/compra.
+
+## ADR-046 — Compatibilidad solo después de construir la combinación real
+
+Estado: aceptada. El rango React Native 0.86.3–0.87.x se conserva porque el mismo tarball se compiló en RN 0.87 bare/New Architecture y en dos proyectos Expo 57/RN 0.86.3 generados por CNG. Android queda validado por builds arm64 dentro de Tourixy, Solsuna y Rutimon aislados. La revisión de Podspec, targets y entitlements no se presenta como build iOS: esa plataforma sigue pendiente de macOS/Xcode y dispositivo físico.
+
+## ADR-047 — El claim de clic se libera si Queue no acepta el mensaje
+
+Estado: aceptada. El Worker reclama una clave de deduplicación antes de enviar a Queue para limitar clics repetidos. Si Queue falla, elimina ese claim antes de propagar el error; de otro modo un reintento válido parecería duplicado y perdería el único clic. La persistencia final conserva su unicidad en Postgres, de modo que liberar tras un fallo no debilita la idempotencia durable.

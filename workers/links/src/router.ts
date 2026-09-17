@@ -8,6 +8,7 @@ export interface LinkRuntime {
   enqueueClick(message: ClickMessage): Promise<void>;
   hash(value: string): Promise<string>;
   isDuplicate(dedupeKey: string): Promise<boolean>;
+  releaseDuplicate(dedupeKey: string): Promise<void>;
   now(): Date;
   resolveLink(slug: string): Promise<SmartLinkConfig | null>;
 }
@@ -214,28 +215,35 @@ export function createSmartLinkHandler(runtime: LinkRuntime) {
     );
 
     if (!(await runtime.isDuplicate(dedupeKey))) {
-      await runtime.enqueueClick({
-        appId: link.appId,
-        clickId,
-        clickedAt: now.toISOString(),
-        dedupeKey,
-        destinationPlatform,
-        fbclid: identifiers.fbclid,
-        gbraid: identifiers.gbraid,
-        gclid: identifiers.gclid,
-        isBot: isLikelyBot(userAgent),
-        isTest: url.searchParams.get("attruvi_test") === "1",
-        networkPrefixHash,
-        organizationId: link.organizationId,
-        platformHint,
-        referrerParameters,
-        requestId: clickId,
-        smartLinkId: link.smartLinkId,
-        ttclid: identifiers.ttclid,
-        userAgentHash,
-        utmParameters,
-        wbraid: identifiers.wbraid,
-      });
+      try {
+        await runtime.enqueueClick({
+          appId: link.appId,
+          clickId,
+          clickedAt: now.toISOString(),
+          dedupeKey,
+          destinationPlatform,
+          fbclid: identifiers.fbclid,
+          gbraid: identifiers.gbraid,
+          gclid: identifiers.gclid,
+          isBot: isLikelyBot(userAgent),
+          isTest: url.searchParams.get("attruvi_test") === "1",
+          networkPrefixHash,
+          organizationId: link.organizationId,
+          platformHint,
+          referrerParameters,
+          requestId: clickId,
+          smartLinkId: link.smartLinkId,
+          ttclid: identifiers.ttclid,
+          userAgentHash,
+          utmParameters,
+          wbraid: identifiers.wbraid,
+        });
+      } catch (error) {
+        // The dedupe claim must not turn a temporary Queue outage into a permanently
+        // lost click. Releasing it lets the client or edge retry enqueue the event.
+        await runtime.releaseDuplicate(dedupeKey);
+        throw error;
+      }
     }
 
     const target = destinationWithAttribution(destination, destinationPlatform, referrerParameters);

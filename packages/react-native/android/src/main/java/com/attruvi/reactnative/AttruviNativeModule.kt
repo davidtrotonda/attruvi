@@ -95,7 +95,7 @@ class AttruviNativeModule(
 
     @ReactMethod
     fun getInitialLink(promise: Promise) {
-        promise.resolve(currentActivity?.intent?.dataString)
+        promise.resolve(context.currentActivity?.intent?.dataString)
     }
 
     @ReactMethod

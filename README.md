@@ -52,7 +52,7 @@ La instalación propia está en `docs/SELF_HOSTING.md`. La auditoría redactada 
 
 La configuración de Supabase Auth, Google OAuth y sus URLs de retorno está en `docs/AUTH_SETUP.md`.
 
-La instalación y compatibilidad del SDK están en `packages/react-native/README.md` y `docs/SDK_COMPATIBILITY.md`.
+La instalación y compatibilidad del SDK están en `packages/react-native/README.md`, `docs/SDK_COMPATIBILITY.md` y la validación contra apps reales en `docs/APP_COMPATIBILITY.md`.
 
 La API pública del SDK, sus límites, OpenAPI, Cloudflare Queue, DLQ y prueba de carga están en `docs/INGEST_API.md` y `workers/ingest/openapi.yaml`.
 

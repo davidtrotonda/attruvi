@@ -85,7 +85,9 @@ La prueba de carga local más reciente aceptó 5.000/5.000 solicitudes con concu
 
 Los asesores remotos de Supabase no reportan claves externas sin índice ni nuevas alertas RLS, y no registran riesgos altos o críticos. Permanece una advertencia agrupada con 24 RPC autenticadas `SECURITY DEFINER`, todas con comprobación explícita de sesión/pertenencia, `search_path` fijado y justificación en `DECISIONS.md`; también aparecen índices aún “sin uso” porque la base está recién creada y el ajuste externo del pool de Auth.
 
-La fase del SDK superó TypeScript estricto con los tipos de React Native 0.87, 9 pruebas unitarias y `npm pack`. El tarball generado se instaló en una app limpia RN 0.87 con `newArchEnabled=true`; el autolinking detectó Android e iOS. La compilación Android no pudo ejecutarse porque este equipo no tiene JDK ni Android SDK, y la compilación iOS requiere macOS/Xcode.
+La fase del SDK superó TypeScript estricto, `npm pack`, 12 pruebas (incluido el E2E objetivo) y compilación Android arm64 con React Native 0.87/New Architecture. El tarball se compiló además dentro de Tourixy, Solsuna y Rutimon en ramas o worktrees aislados: Tourixy RN 0.87 bare, Solsuna Expo 57/RN 0.86.3 y Rutimon Expo 57/RN 0.86.3. La validación corrigió en el SDK el acceso Kotlin a `context.currentActivity`; no parcheó las apps para ocultar el problema. iOS sigue pendiente porque este host Windows no dispone de Xcode.
+
+El E2E sintético enlaza un clic TikTok con Install Referrer, primera apertura, `sign_up`, compra de 49,90 EUR, coste de 10,00 EUR, CPI/CAC de 10,00 EUR, ROAS 4,99 y tres decisiones de postback: TikTok elegible en validación local, Google omitido sin click ID propio y Meta omitido sin `fbclid`. También cubre offline/reintento, duplicados, dos organizaciones, ausencia de consentimiento y fallos temporales. La matriz y hashes reproducibles están en `docs/APP_COMPATIBILITY.md`.
 
 ## Pendiente de fases posteriores
 

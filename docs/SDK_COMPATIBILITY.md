@@ -16,7 +16,7 @@ También se comprobaron los identificadores de plataforma y los esquemas de deep
 
 ## Decisiones derivadas
 
-- Peer range objetivo: `react-native >=0.86.3 <0.88`, React 19 y AsyncStorage `>=2.2.0 <4`. La prueba empaquetada se ejecutó con 0.87.0; 0.86.3 queda respaldado por la auditoría de las apps, no por una compilación nativa en este host.
+- Peer range objetivo: `react-native >=0.86.3 <0.88`, React 19 y AsyncStorage `>=2.2.0 <4`. El tarball se construyó con RN 0.87 bare y con dos aplicaciones Expo/RN 0.86.3 reales.
 - El paquete usa autolinking estándar, Kotlin y Swift. El módulo clásico se carga por `TurboModuleRegistry` mediante la capa oficial de interoperabilidad de New Architecture; no modifica `MainApplication`, `AppDelegate` ni los proyectos a mano.
 - Android hereda `compileSdk`, `targetSdk` y `minSdk` de la app; el fallback mínimo es API 24, igual que Tourixy.
 - El pod declara iOS 15.1. Rutimon, con iOS 16.4, queda por encima de ese mínimo.
@@ -27,10 +27,11 @@ También se comprobaron los identificadores de plataforma y los esquemas de deep
 | Comprobación | Resultado |
 |---|---|
 | TypeScript estricto contra tipos de React Native 0.87 | superado |
-| Unitarias de cola, consentimiento, sesiones, deep links e idempotencia | 9/9 superadas |
+| Unitarias de cola, consentimiento, sesiones, deep links e idempotencia, más E2E objetivo | 12/12 superadas |
 | `npm pack` e inventario de archivos nativos | superado; tarball instalable generado |
 | Autolinking en proyecto limpio RN 0.87 con New Architecture | Android e iOS detectados desde el tarball |
-| Compilación Android RN 0.87 | no ejecutable en este Windows: no hay JDK ni Android SDK instalados |
+| Compilación Android RN 0.87 | superada en fixture y en el piloto aislado de Tourixy |
+| Compilación Android Expo 57 / RN 0.86.3 | superada dentro de Solsuna y Rutimon en worktrees efímeros |
 | Compilación iOS | no ejecutable desde Windows; podspec y fuentes se validan estáticamente |
 
-No se amplía el rango de compatibilidad hasta ejecutar esas mismas pruebas con otra versión.
+La evidencia detallada, hashes de APK, referencias auditadas y límites de cada afirmación están en [`APP_COMPATIBILITY.md`](./APP_COMPATIBILITY.md). No se amplía el rango de compatibilidad hasta ejecutar esas mismas pruebas con otra versión.

@@ -29,6 +29,10 @@ export class LocalLinkRuntime implements LinkRuntime {
     return false;
   }
 
+  async releaseDuplicate(dedupeKey: string) {
+    this.dedupeKeys.delete(dedupeKey);
+  }
+
   async resolveLink(slug: string) {
     return this.links.get(slug) ?? null;
   }

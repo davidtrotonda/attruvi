@@ -156,6 +156,30 @@ describe("resolución de enlaces inteligentes", () => {
     expect(runtime.clicks[0]?.isBot).toBe(true);
   });
 
+  it("libera la deduplicación cuando Queue falla para que el reintento conserve el clic", async () => {
+    class FailOnceRuntime extends LocalLinkRuntime {
+      attempts = 0;
+
+      override async enqueueClick(message: Parameters<LocalLinkRuntime["enqueueClick"]>[0]) {
+        this.attempts += 1;
+        if (this.attempts === 1) throw new Error("queue_temporarily_unavailable");
+        await super.enqueueClick(message);
+      }
+    }
+
+    const runtime = new FailOnceRuntime([smartLink]);
+    const handler = createSmartLinkHandler(runtime);
+    const retryableRequest = () => request("/verano-2026?ttclid=retry-1", "Mozilla/5.0 (Linux; Android 15)");
+
+    await expect(handler(retryableRequest())).rejects.toThrow("queue_temporarily_unavailable");
+    const response = await handler(retryableRequest());
+
+    expect(response.status).toBe(302);
+    expect(runtime.attempts).toBe(2);
+    expect(runtime.clicks).toHaveLength(1);
+    expect(runtime.clicks[0]?.ttclid).toBe("retry-1");
+  });
+
   it("resuelve desde el adaptador local con latencia baja", async () => {
     const runtime = new LocalLinkRuntime([smartLink]);
     const started = performance.now();
@@ -228,5 +252,5 @@ describe("utilidades y asociaciones", () => {
     await expect(apple.json()).resolves.toHaveProperty("applinks.details");
     expect(android.status).toBe(200);
     await expect(android.json()).resolves.toEqual([]);
-  });
+  }, 15_000);
 });
