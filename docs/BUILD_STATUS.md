@@ -13,6 +13,11 @@ Actualizado: 2026-09-17.
 - Sesiones SSR para Next.js 16 mediante `proxy.ts`, validación con `getClaims()`, callback seguro y protección redundante de dashboard, onboarding y APIs privadas.
 - Creación atómica de perfil, organización personal y membresía owner; onboarding reanudable para la primera app sin pedir credenciales publicitarias.
 - Dashboard inicial conectado al modelo real de métricas y compatible con el dataset ficticio de seeds.
+- Sección multiapp para crear y editar apps iOS/Android con identificadores, moneda, zona horaria y estado.
+- Constructor no técnico de enlaces con fuente, jerarquía publicitaria, UTM, afiliado/creador, deep link, destinos, slug y ventana de atribución.
+- Listado para copiar, probar, editar, activar y desactivar enlaces, con clics válidos separados por plataforma.
+- Worker de enlaces completo con redirect HTTP inmediato, KV, Queue, RPC de resolución, Play Install Referrer, AASA/assetlinks, bots, deduplicación y adaptador local.
+- Auditoría de licencia/arquitectura de Link My App e implementación nueva sin copiar sus datos o acoplamientos.
 - Documentación de arquitectura, taxonomía, modelo de datos, particionado, retención y rollback.
 
 ## Verificación disponible
@@ -22,11 +27,12 @@ Actualizado: 2026-09-17.
 - `npm run test:web`: registro, verificación, contraseña incorrecta, recuperación, Google OAuth simulado, callback seguro y clasificación de rutas privadas.
 - `npm run test:db`: aislamiento RLS e invariantes en Postgres local; necesita `supabase start` y Docker.
 
-En esta ejecución pasaron lint, typecheck, las 8 pruebas web de autenticación, las 7 pruebas de paquetes, el contrato estructural SQL y los builds de producción de Next.js y ambos Workers. La landing, el diálogo responsive y la redirección de una visita anónima a `/dashboard` también se comprobaron en navegador. La suite pgTAP quedó creada pero no pudo ejecutarse porque este equipo no tiene Docker ni `psql`; no se considera validada en Postgres hasta correr `npm run test:db` en un entorno con Supabase local.
+En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 14 pruebas web, 19 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js y ambos Workers. El build incluye `/dashboard/apps` y `/dashboard/links`; el Worker de enlaces supera redirects iOS/Android/web, Unicode, Install Referrer, destinos ausentes, enlaces no disponibles, bots, deduplicación, abuso, latencia local y asociaciones nativas. En navegador se comprobó que una visita anónima a `/dashboard/links` vuelve a la landing y abre el diálogo de acceso con `next` seguro.
+
+La suite pgTAP se amplió a 16 assertions para las RPC, slugs reservados y reintentos de Queue. `npm run test:db` no pudo conectarse a `127.0.0.1:54322` porque Supabase local/Docker no está iniciado; no se considera validada en PostgreSQL hasta ejecutar `npx supabase start` y repetirla.
 
 ## Pendiente de fases posteriores
 
-- Persistencia real desde Workers y bindings de Cloudflare.
 - Implementación nativa del SDK React Native.
 - Credenciales y APIs de Google Ads, Meta Ads y TikTok Ads.
 - Atribución, métricas y postbacks en producción.
@@ -38,3 +44,5 @@ Nada de lo anterior se presenta como funcional hasta que se implemente y verifiq
 - Aplicar las migraciones al proyecto Supabase enlazado.
 - Añadir en Supabase las URLs de `docs/AUTH_SETUP.md`, activar Google con su Client ID/Secret y configurar un SMTP de producción.
 - Añadir las variables públicas de Supabase a los entornos de Vercel. No se requieren secretos de Google en el navegador.
+- Crear KV/Queues, configurar los tres secretos del Worker y asociar el dominio de enlaces siguiendo `docs/SMART_LINKS_CLOUDFLARE.md`.
+- Añadir las asociaciones reales de cada app a `association-config.ts` y comprobar Universal Links/App Links en dispositivos.

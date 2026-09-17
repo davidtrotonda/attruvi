@@ -72,6 +72,13 @@ assert.match(migration, /Partition monthly by occurred_at/i);
 assert.match(migration, /ensure_personal_workspace/i);
 assert.match(migration, /complete_personal_onboarding/i);
 assert.match(migration, /organizations_one_personal_workspace_per_creator/i);
+assert.match(migration, /create or replace function public\.upsert_personal_app\(payload jsonb\)/i);
+assert.match(migration, /create or replace function public\.upsert_personal_smart_link\(payload jsonb\)/i);
+assert.match(migration, /create or replace function public\.resolve_smart_link\(requested_slug text\)/i);
+assert.match(migration, /grant execute on function public\.resolve_smart_link\(text\)[\s\S]*?to service_role/i);
+assert.match(migration, /create unique index link_clicks_app_dedupe_unique/i);
+assert.match(migration, /smart_links_slug_not_reserved/i);
+assert.match(migration, /link_destinations_https/i);
 assert.match(
   migration,
   /revoke all on function public\.ensure_personal_workspace\(text\)[\s\S]+grant execute[\s\S]+to authenticated/i,
@@ -80,6 +87,9 @@ assert.match(
 for (const source of ["google_ads", "meta_ads", "tiktok_ads", "affiliate", "influencer", "organic"]) {
   assert.match(seed, new RegExp(`'${source}'`, "i"), `el seed no contiene ${source}`);
 }
+
+assert.match(seed, /'ios',[\s\S]+https:\/\/apps\.apple\.com/i, "el seed no contiene destino iOS");
+assert.match(seed, /'web',[\s\S]+https:\/\/example\.com\/app/i, "el seed no contiene fallback web");
 
 for (const proof of [
   "otra organización",

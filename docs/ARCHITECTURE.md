@@ -23,11 +23,11 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 
 | Componente | Responsabilidad | No debe hacer |
 |---|---|---|
-| Next.js raíz | Landing actual y, más adelante, panel autenticado | Guardar secretos de red en el navegador |
+| Next.js raíz | Landing, panel autenticado, gestión de apps y constructor de enlaces | Guardar secretos de red en el navegador |
 | `packages/core` | IDs opacos, contratos y validación compartida | Depender del DOM o de React Native |
 | `packages/react-native` | Superficie pública del futuro SDK | Contener una clave de servidor |
 | `packages/connectors` | Contratos normalizados para gasto publicitario | Inventar resultados cuando falten credenciales |
-| `workers/links` | Resolver enlaces y registrar clics con baja latencia | Mostrar una página intermedia |
+| `workers/links` | Resolver enlaces desde KV/Supabase, producir clics en Queue y redirigir | Mostrar una página intermedia o guardar IP/UA en claro |
 | `workers/ingest` | Validar lotes del SDK antes de persistirlos | Confiar en `organization_id` del dispositivo |
 | Supabase | Fuente de verdad, Auth, RLS, idempotencia y colas | Exponer `service_role` a clientes |
 
@@ -42,13 +42,36 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 
 ## Flujo de datos y fallos
 
-1. `workers/links` valida el slug, genera un identificador criptográficamente seguro y redirige. La persistencia duradera se conectará en la fase de enlaces.
+1. `workers/links` valida el slug, genera un identificador criptográficamente seguro, acepta el clic en Queue y responde `302`. KV guarda resoluciones positivas y negativas; las ediciones del panel purgan las claves afectadas.
 2. El SDK manda lotes pequeños con `event_id` e `idempotency_key` estables. `workers/ingest` aplica los esquemas de `packages/core`.
 3. Postgres impone unicidad por app para que los reintentos no dupliquen eventos, compras, costes ni postbacks.
 4. Los jobs se reclaman con `FOR UPDATE SKIP LOCKED`; una llamada externa nunca mantiene abierta la transacción.
 5. Los errores recuperables pasan a reintento con backoff; los permanentes quedan auditados y visibles.
 
-Los Workers actuales son una base ejecutable: exponen salud, validan el contrato de lote y fallan cerrados. Aún no persisten datos ni resuelven destinos reales; esas capacidades requieren bindings y credenciales que no forman parte de esta fase.
+El Worker de enlaces ya resuelve destinos reales mediante una RPC exclusiva de `service_role`, sirve AASA/assetlinks y persiste lotes idempotentes desde Queue. El Worker de ingestión sigue siendo una base contractual: la implementación del SDK y el pipeline de eventos pertenecen a la fase siguiente. Los bindings y secretos de producción se mantienen pendientes de configuración externa.
+
+## Flujo específico de un enlace
+
+```text
+dashboard autenticado
+  → RPC atómica (app/fuente/campaña/grupo/anuncio/enlace/destinos)
+  → purga autenticada de KV
+  → GET https://<dominio>/<slug>
+  ├─ app instalada + asociación válida
+  │    → Universal Link/App Link abre la app
+  │    → SDK recibe la URL original y la envía a ingestión
+  └─ petición llega al Worker
+       → resolución KV o RPC de servicio
+       → click_id + UTMs + IDs publicitarios
+       → Queue (entrega duradera)
+       ├─ iOS: 302 a App Store
+       ├─ Android: 302 a Google Play + Install Referrer
+       └─ web: 302 al fallback con parámetros
+       → consumidor por lotes
+       → link_clicks (unicidad app + dedupe_key)
+```
+
+Cuando el sistema operativo abre la app directamente, puede no solicitar la ruta de red al Worker. En ese caso el SDK es quien registra la apertura y las señales contenidas en la URL; no se inventa un clic edge que no ocurrió.
 
 ## Escala
 

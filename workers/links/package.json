@@ -7,9 +7,10 @@
     "build": "wrangler deploy --dry-run --outdir dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "types": "wrangler types --include-runtime false"
+    "types": "wrangler types --env-file .dev.vars.example --include-runtime false"
   },
   "dependencies": {
-    "@attruvi/core": "0.1.0"
+    "@attruvi/core": "0.1.0",
+    "zod": "4.6.5"
   }
 }

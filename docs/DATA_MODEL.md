@@ -23,13 +23,15 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 - La jerarquía publicitaria estricta usa FKs compuestas. Las tablas con dimensiones opcionales tienen un trigger que valida tenant y coherencia entre niveles.
 - Importes e ingresos son `bigint` en unidades menores y llevan moneda ISO; las ratios se calcularán al consultar, no se almacenan como flotantes.
 - `events` tiene unicidad por `event_id` e `idempotency_key`; compras, costes, métricas y postbacks tienen sus propias claves idempotentes.
+- `link_clicks` deduplica entregas por `(app_id, dedupe_key)`, distingue bots/pruebas y conserva parámetros de referrer sin guardar la IP ni el agente en claro.
+- Los slugs reservados y destinos no HTTPS se rechazan tanto en la interfaz como mediante constraints.
 - Los datos operativos son de solo lectura para miembros. La escritura de ingestión, rollups y jobs requiere `service_role`.
 
 ## RLS
 
 Todas las tablas públicas tienen RLS activado. `anon` no recibe privilegios. Un usuario autenticado puede leer una fila solo cuando `private.is_organization_member(organization_id)` valida su membresía. `owner` y `admin` pueden mutar tablas de configuración; `viewer` no.
 
-Las dos funciones `SECURITY DEFINER` de `private` son helpers internos para evitar recursión sobre `organization_members`. Las RPC públicas de onboarding también requieren privilegios elevados para crear el espacio inicial en una sola transacción. Todas comprueban `auth.uid()`, fijan `search_path = ''`, revocan acceso a `public` y `anon`, y las RPC nunca aceptan un identificador de organización enviado por el cliente. La reclamación de postbacks es `SECURITY INVOKER` y solo puede ejecutarla `service_role`.
+Las dos funciones `SECURITY DEFINER` de `private` son helpers internos para evitar recursión sobre `organization_members`. Las RPC públicas de onboarding y gestión de apps/enlaces requieren privilegios elevados para escribir varias tablas en una sola transacción. Todas comprueban `auth.uid()`, fijan `search_path = ''`, revocan acceso a `public` y `anon`, y nunca aceptan un identificador de organización enviado por el cliente. `resolve_smart_link` devuelve solo el contrato público necesario para redirigir y solo puede ejecutarla `service_role`. La reclamación de postbacks es `SECURITY INVOKER` y también queda restringida al servicio.
 
 ## Particionado y retención
 

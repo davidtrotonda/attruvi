@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.1.11",
-    "@cloudflare/workers-types": "5.20260916.1",
+    "@cloudflare/workers-types": "5.20260917.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

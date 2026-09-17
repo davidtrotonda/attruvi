@@ -39,3 +39,19 @@ Estado: aceptada. El primer acceso necesita crear tres filas dependientes sin es
 ## ADR-010 — Respuestas de autenticación no enumerables
 
 Estado: aceptada. El acceso incorrecto, la recuperación y el reenvío no exponen mensajes internos del proveedor ni confirman si una cuenta existe. La interfaz añade bloqueo mientras una petición está activa y 60 segundos entre reenvíos; Supabase mantiene el límite definitivo del servidor.
+
+## ADR-011 — Implementación independiente de Link My App
+
+Estado: aceptada. Link My App tiene licencia Apache-2.0, pero su Worker muestra un interstitial y está acoplado a Firebase/D1 y a configuración del despliegue original. Attruvi conserva solo patrones arquitectónicos generales y usa contratos nuevos; no se copia código ni información del propietario.
+
+## ADR-012 — KV para lectura, Queue para durabilidad y Supabase como verdad
+
+Estado: aceptada. KV reduce latencia y puede ser eventualmente consistente, por lo que no es el registro analítico. Cada clic se acepta en Queue y el consumidor lo inserta por lotes en Postgres. Un índice único absorbe reintentos. Las ediciones purgan la caché, pero una entrada antigua no puede ampliar privilegios porque solo contiene el contrato público de un enlace.
+
+## ADR-013 — Redirect directo y parámetros de instalación
+
+Estado: aceptada. El Worker nunca sirve una pantalla intermedia. Universal Links/App Links pueden abrir la app; el fallback responde `302`. Android recibe `attruvi_click_id`, UTMs e IDs disponibles dentro de Play Install Referrer. En iOS la atribución posterior dependerá de las señales permitidas por Apple y las redes; no se promete determinismo ni se usa fingerprinting oculto.
+
+## ADR-014 — Hashes minimizados para control de abuso
+
+Estado: aceptada. La deduplicación temporal necesita una señal estable, pero no justifica persistir IP o `User-Agent`. El Worker reduce la IP a prefijo, aplica un salt secreto y SHA-256 a prefijo y agente, limita la ventana a 20 segundos y marca bots/pruebas sin incluirlos en los contadores principales.

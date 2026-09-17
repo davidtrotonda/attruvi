@@ -159,9 +159,35 @@ select
 from generate_series(1, 6) as series(n)
 on conflict (id) do nothing;
 
+insert into public.link_destinations (
+  id, organization_id, app_id, smart_link_id, platform, destination_url
+)
+select
+  ('72000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
+  '10000000-0000-4000-8000-000000000001'::uuid,
+  '20000000-0000-4000-8000-000000000001'::uuid,
+  ('70000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
+  'ios',
+  'https://apps.apple.com/app/id000000000'
+from generate_series(1, 6) as series(n)
+on conflict (id) do nothing;
+
+insert into public.link_destinations (
+  id, organization_id, app_id, smart_link_id, platform, destination_url
+)
+select
+  ('73000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
+  '10000000-0000-4000-8000-000000000001'::uuid,
+  '20000000-0000-4000-8000-000000000001'::uuid,
+  ('70000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
+  'web',
+  'https://example.com/app'
+from generate_series(1, 6) as series(n)
+on conflict (id) do nothing;
+
 insert into public.link_clicks (
   id, organization_id, app_id, smart_link_id, request_id, clicked_at,
-  platform_hint, destination_platform, utm_parameters
+  platform_hint, destination_platform, utm_parameters, dedupe_key
 )
 select
   ('80000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
@@ -170,7 +196,8 @@ select
   ('70000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
   ('81000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
   '2026-09-10T08:00:00Z'::timestamptz + make_interval(hours => n),
-  'android', 'android', jsonb_build_object('utm_campaign', 'campaign-' || n)
+  'android', 'android', jsonb_build_object('utm_campaign', 'campaign-' || n),
+  'demo-click-dedupe-' || lpad(n::text, 2, '0')
 from generate_series(1, 5) as series(n)
 on conflict (id) do nothing;
 

@@ -4,6 +4,33 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-16",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "SUPABASE_URL": "https://your-project.supabase.co",
+    "SMART_LINK_CACHE_TTL_SECONDS": "300"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "LINKS_KV",
+      "id": "00000000000000000000000000000000"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "CLICK_QUEUE",
+        "queue": "attruvi-link-clicks"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "attruvi-link-clicks",
+        "max_batch_size": 100,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "dead_letter_queue": "attruvi-link-clicks-dead-letter"
+      }
+    ]
+  },
   "observability": {
     "enabled": true,
     "logs": { "head_sampling_rate": 1 },

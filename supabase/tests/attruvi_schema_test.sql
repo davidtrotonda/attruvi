@@ -1,8 +1,18 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(16);
 
 select has_table('public', 'events', 'events existe en el modelo versionado');
+
+select has_function(
+  'public', 'upsert_personal_app', array['jsonb'],
+  'la gestión de apps usa una operación atómica'
+);
+
+select has_function(
+  'public', 'upsert_personal_smart_link', array['jsonb'],
+  'el constructor de enlaces usa una operación atómica'
+);
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -157,6 +167,52 @@ select ok(
   and (select count(*) >= 6 from public.ad_costs where app_id = '20000000-0000-4000-8000-000000000001')
   and (select count(*) >= 6 from public.daily_metrics where app_id = '20000000-0000-4000-8000-000000000001'),
   'los seeds contienen datos suficientes para un dashboard útil'
+);
+
+select throws_ok(
+  $$
+    insert into public.smart_links (organization_id, app_id, name, slug)
+    values (
+      '10000000-0000-4000-8000-000000000001',
+      '20000000-0000-4000-8000-000000000001',
+      'Slug reservado', 'dashboard'
+    )
+  $$,
+  '23514'
+);
+
+insert into public.link_clicks (
+  id, organization_id, app_id, smart_link_id, request_id, clicked_at,
+  platform_hint, destination_platform, dedupe_key
+)
+values (
+  '82000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001',
+  '70000000-0000-4000-8000-000000000001',
+  '83000000-0000-4000-8000-000000000001', now(),
+  'android', 'android', 'queue-dedupe-test-0001'
+)
+on conflict (app_id, dedupe_key) do nothing;
+
+insert into public.link_clicks (
+  id, organization_id, app_id, smart_link_id, request_id, clicked_at,
+  platform_hint, destination_platform, dedupe_key
+)
+values (
+  '82000000-0000-4000-8000-000000000002',
+  '10000000-0000-4000-8000-000000000001',
+  '20000000-0000-4000-8000-000000000001',
+  '70000000-0000-4000-8000-000000000001',
+  '83000000-0000-4000-8000-000000000002', now(),
+  'android', 'android', 'queue-dedupe-test-0001'
+)
+on conflict (app_id, dedupe_key) do nothing;
+
+select is(
+  (select count(*) from public.link_clicks where dedupe_key = 'queue-dedupe-test-0001'),
+  1::bigint,
+  'dos entregas de Queue del mismo clic producen una sola fila'
 );
 
 set local role authenticated;
