@@ -2,7 +2,7 @@
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
-  confirmation_token, recovery_token, email_change
+  confirmation_token, recovery_token, email_change, email_change_token_new
 )
 values (
   '00000000-0000-0000-0000-000000000000',
@@ -14,9 +14,26 @@ values (
   now(),
   '{"provider":"email","providers":["email"]}'::jsonb,
   '{"display_name":"Propietaria Demo"}'::jsonb,
-  now(), now(), '', '', ''
+  now(), now(), '', '', '', ''
 )
 on conflict (id) do nothing;
+
+-- Supabase Auth requires a concrete identity for every non-anonymous user.
+-- Keeping the demo identity in the seed makes password sign-in reproducible on
+-- local databases and ephemeral branches without using a privileged admin API.
+insert into auth.identities (
+  id, provider_id, user_id, identity_data, provider,
+  last_sign_in_at, created_at, updated_at
+)
+values (
+  '00000000-0000-4000-8000-000000000102',
+  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000101',
+  '{"sub":"00000000-0000-4000-8000-000000000101","email":"demo-owner@attruvi.invalid","email_verified":true,"phone_verified":false}'::jsonb,
+  'email',
+  now(), now(), now()
+)
+on conflict (provider_id, provider) do nothing;
 
 insert into public.profiles (id, display_name)
 values ('00000000-0000-4000-8000-000000000101', 'Propietaria Demo')

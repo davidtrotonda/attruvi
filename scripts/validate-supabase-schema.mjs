@@ -154,6 +154,8 @@ for (const source of ["google_ads", "meta_ads", "tiktok_ads", "manual", "affilia
 
 assert.match(seed, /'ios',[\s\S]+https:\/\/apps\.apple\.com/i, "el seed no contiene destino iOS");
 assert.match(seed, /'web',[\s\S]+https:\/\/example\.com\/app/i, "el seed no contiene fallback web");
+assert.match(seed, /insert into auth\.identities/i, "el usuario demo no tiene identidad de Auth");
+assert.match(seed, /email_change_token_new/i, "el usuario demo puede romper GoTrue por tokens NULL");
 
 for (const proof of [
   "otra organización",
