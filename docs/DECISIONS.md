@@ -141,7 +141,7 @@ Estado: aceptada. Cada moneda mantiene su cubo y nunca se agrega con otra sin un
 
 ## ADR-034 — Contexto del dashboard por slugs y autorización por UUID
 
-Estado: aceptada. Las URLs compartibles solo incluyen slug de organización, slug de app, entorno y filtros no sensibles. El servidor resuelve esos valores dentro de las membresías visibles por RLS y solo entonces usa los UUID internos. Las consultas de métricas verifican acceso con el cliente autenticado antes de entrar en la caché de servicio; el navegador nunca recibe eventos crudos ni identificadores internos innecesarios.
+Estado: aceptada. Las URLs compartibles solo incluyen slug de organización, slug de app, entorno y filtros no sensibles. El servidor resuelve esos valores dentro de las membresías visibles por RLS y solo entonces usa los UUID internos. Las consultas de métricas verifican acceso con el cliente autenticado antes de entrar en la caché de servicio; si esa identidad técnica no está configurada, ejecutan la misma RPC con la sesión y RLS en lugar de fallar. El navegador nunca recibe eventos crudos ni identificadores internos innecesarios.
 
 ## ADR-035 — Invitaciones con token efímero y escritura auditada
 

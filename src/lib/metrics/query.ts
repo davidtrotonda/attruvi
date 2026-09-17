@@ -68,17 +68,7 @@ async function getCachedMetricRows(query: MetricQuery) {
   const cachedQuery = unstable_cache(
     async () => {
       const service = createSupabaseServiceClient();
-      const { data, error } = await service.rpc("query_metric_rollups", {
-        requested_app_id: query.appId,
-        requested_currency: query.currency,
-        requested_environment: query.environment,
-        requested_from: query.from,
-        requested_granularity: query.granularity ?? "total",
-        requested_level: query.level,
-        requested_platform: query.platform ?? null,
-        requested_source_id: query.sourceId ?? null,
-        requested_to: query.to,
-      });
+      const { data, error } = await service.rpc("query_metric_rollups", metricRpcArguments(query));
 
       if (error) throw new Error("No se han podido consultar los agregados de métricas.");
       return (data ?? []) as MetricRollupRow[];
@@ -87,6 +77,20 @@ async function getCachedMetricRows(query: MetricQuery) {
     { revalidate: 60, tags: [metricsCacheTag(query.appId)] },
   );
   return cachedQuery();
+}
+
+function metricRpcArguments(query: MetricQuery) {
+  return {
+    requested_app_id: query.appId,
+    requested_currency: query.currency,
+    requested_environment: query.environment,
+    requested_from: query.from,
+    requested_granularity: query.granularity ?? "total",
+    requested_level: query.level,
+    requested_platform: query.platform ?? null,
+    requested_source_id: query.sourceId ?? null,
+    requested_to: query.to,
+  };
 }
 
 /** Verifies app access with the user's RLS-bound client before entering the service cache. */
@@ -100,5 +104,12 @@ export async function getMetricRowsForVerifiedApp(
     .eq("id", query.appId)
     .maybeSingle();
   if (error || !data) throw new Error("No tienes acceso a las métricas de esta app.");
-  return getCachedMetricRows(query);
+  const hasServiceIdentity = Boolean(
+    process.env.SUPABASE_SECRET_KEY?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
+  );
+  if (hasServiceIdentity) return getCachedMetricRows(query);
+
+  const direct = await authenticatedClient.rpc("query_metric_rollups", metricRpcArguments(query));
+  if (direct.error) throw new Error("No se han podido consultar los agregados de métricas.");
+  return (direct.data ?? []) as MetricRollupRow[];
 }
