@@ -150,3 +150,7 @@ Estado: aceptada. El owner crea un token aleatorio de 256 bits y Postgres solo c
 ## ADR-036 — Estado de calidad separado de las métricas
 
 Estado: aceptada. Una cifra no se interpreta igual si el gasto está pendiente o un conector sigue sincronizando. El dashboard deriva un estado explícito —completo, parcial, sincronizando o sin costes— desde cuentas, jobs y filas sin relacionar. Una cuenta sin hechos muestra pasos de onboarding y nunca rellena tarjetas con números de demo.
+
+## ADR-037 — Errores públicos seguros y SVG hidratable
+
+Estado: aceptada. La frontera de error del dashboard muestra una explicación recuperable y una referencia técnica, pero no expone mensajes internos del servidor. Los títulos accesibles del gráfico SVG se construyen como una única cadena: el DOM que interpreta el navegador coincide así con el HTML del servidor y la hidratación de React permanece estable en producción.

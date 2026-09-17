@@ -50,6 +50,7 @@ Actualizado: 2026-09-17.
 - Campañas con jerarquía campaña → grupo → anuncio, filtros compartibles por slug, ordenación de todas las métricas, comparación local de hasta cuatro elementos, detalle accesible y paginación desde el servidor.
 - Selector persistente de app/entorno, contexto multiempresa aislado por RLS, formatos por moneda/zona horaria y estados reales de carga, vacío, error, permisos y credenciales pendientes.
 - Las lecturas de métricas usan caché de servicio cuando existe una identidad server-side y caen de forma segura al cliente autenticado con RLS cuando Vercel no dispone de esa clave; el dashboard no deja de funcionar por una optimización opcional.
+- La verificación visual autenticada cubre Resumen y Campañas a 1440 px, Resumen móvil a 390 px, navegación por teclado y ausencia de overflow; el gráfico usa un título SVG estable para hidratar sin diferencias entre servidor y navegador.
 - Gestión de equipo owner/admin/viewer mediante invitaciones de un solo uso: solo se almacena SHA-256 del token, el correo autenticado debe coincidir y las escrituras directas de membresía están revocadas para impedir saltarse la auditoría o el último owner.
 - `docs/METRICS.md`, fixture exacto de 33 assertions y benchmark de un millón de hechos sintéticos.
 - OpenAPI, ejemplos ficticios, entorno local con Miniflare, adaptador en memoria exclusivo de pruebas y prueba de carga medida.

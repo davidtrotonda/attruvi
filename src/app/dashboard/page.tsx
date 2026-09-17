@@ -37,7 +37,7 @@ function TrendChart({ rows, currency }: { rows: MetricRollupRow[]; currency: str
     <svg aria-label={`Evolución diaria de gasto e ingresos en ${currency}`} className="dashboard-chart" role="img" viewBox="0 0 800 240">
       {[35, 80, 125, 170, 215].map((y) => <line key={y} x1="30" x2="770" y1={y} y2={y} />)}
       <polyline className="chart-line-spend" fill="none" points={spend} /><polyline className="chart-line-revenue" fill="none" points={revenue} />
-      {ordered.map((row, index) => { const [x, y] = point(number(row.revenue_minor), index).split(","); return <circle className="chart-point" cx={x} cy={y} key={row.metric_date} r="3"><title>{row.metric_date}: {formatMoneyMinor(row.revenue_minor, currency)}</title></circle>; })}
+      {ordered.map((row, index) => { const [x, y] = point(number(row.revenue_minor), index).split(","); return <circle className="chart-point" cx={x} cy={y} key={row.metric_date} r="3"><title>{`${row.metric_date}: ${formatMoneyMinor(row.revenue_minor, currency)}`}</title></circle>; })}
     </svg>
     <div className="chart-legend"><span><i className="legend-revenue" />Ingresos</span><span><i className="legend-spend" />Gasto</span><small>{ordered[0]?.metric_date} — {ordered.at(-1)?.metric_date}</small></div>
   </div>;
