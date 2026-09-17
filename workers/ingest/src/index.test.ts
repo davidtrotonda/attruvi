@@ -41,6 +41,8 @@ function eventBody(overrides: Record<string, unknown> = {}) {
     environment: "production",
     platform: "android",
     sdkVersion: "0.1.0",
+    consent: "granted",
+    purposes: { advertising: false, analytics: true, attribution: true, personalization: false },
     events: [
       {
         eventId: "30000000-0000-4000-8000-000000000001",
@@ -108,6 +110,7 @@ describe("API pública de ingestión", () => {
         platform: "android",
         sdkVersion: "0.1.0",
         consent: "granted",
+        purposes: { advertising: false, analytics: true, attribution: true, personalization: false },
       }),
     );
     expect(response.status).toBe(202);
@@ -153,6 +156,7 @@ describe("API pública de ingestión", () => {
       platform: "android",
       sdkVersion: "0.1.0",
       consent: "granted",
+      purposes: { advertising: false, analytics: true, attribution: true, personalization: false },
     };
     const response = await createIngestHandler(runtime)(
       post("/v1/installations", body, {

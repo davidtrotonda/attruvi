@@ -14,6 +14,7 @@ import type {
   AttruviEvent,
   AttruviEventBatch,
   AttributionListener,
+  ConsentPurposes,
   ConsentState,
   EventProperties,
   FlushResult,
@@ -35,6 +36,12 @@ interface NormalizedConfiguration extends AttruviConfiguration {
 const DEFAULT_STATE: PersistedSdkState = {
   version: 1,
   consent: "unknown",
+  purposes: {
+    analytics: true,
+    attribution: true,
+    advertising: false,
+    personalization: false,
+  },
   installTracked: false,
   lastBackgroundAt: null,
 };
@@ -43,8 +50,25 @@ function storageNamespace(appKey: string): string {
   return `@attruvi/${appKey.replace(/[^A-Za-z0-9_-]/g, "_")}`;
 }
 
-function parseState(value: string | null, configuredConsent: ConsentState): PersistedSdkState {
-  if (!value) return { ...DEFAULT_STATE, consent: configuredConsent };
+function normalizePurposes(value?: Partial<ConsentPurposes>): ConsentPurposes {
+  const purposes = {
+    analytics: value?.analytics ?? true,
+    attribution: value?.attribution ?? true,
+    advertising: value?.advertising ?? false,
+    personalization: value?.personalization ?? false,
+  };
+  if (purposes.advertising && !purposes.attribution) {
+    throw new Error("El uso publicitario requiere habilitar también la atribución");
+  }
+  return purposes;
+}
+
+function parseState(
+  value: string | null,
+  configuredConsent: ConsentState,
+  configuredPurposes?: ConsentPurposes,
+): PersistedSdkState {
+  if (!value) return { ...DEFAULT_STATE, consent: configuredConsent, purposes: normalizePurposes(configuredPurposes) };
   try {
     const parsed = JSON.parse(value) as Partial<PersistedSdkState>;
     return {
@@ -53,6 +77,7 @@ function parseState(value: string | null, configuredConsent: ConsentState): Pers
         parsed.consent === "granted" || parsed.consent === "denied" || parsed.consent === "unknown"
           ? parsed.consent
           : configuredConsent,
+      purposes: normalizePurposes(parsed.purposes ?? configuredPurposes),
       installTracked: parsed.installTracked === true,
       lastBackgroundAt:
         typeof parsed.lastBackgroundAt === "number" && Number.isFinite(parsed.lastBackgroundAt)
@@ -60,7 +85,7 @@ function parseState(value: string | null, configuredConsent: ConsentState): Pers
           : null,
     };
   } catch {
-    return { ...DEFAULT_STATE, consent: configuredConsent };
+    return { ...DEFAULT_STATE, consent: configuredConsent, purposes: normalizePurposes(configuredPurposes) };
   }
 }
 
@@ -125,7 +150,11 @@ export class AttruviSdkClient {
 
     this.configuration = configuration;
     const namespace = storageNamespace(configuration.appKey);
-    this.state = parseState(await this.runtime.storage.getItem(`${namespace}/state`), input.consent);
+    this.state = parseState(
+      await this.runtime.storage.getItem(`${namespace}/state`),
+      input.consent,
+      input.purposes,
+    );
     if (this.state.consent === "unknown" && input.consent !== "unknown") {
       this.state = { ...this.state, consent: input.consent };
     }
@@ -220,10 +249,14 @@ export class AttruviSdkClient {
     this.identifiers = await this.runtime.native.resetAnonymousId();
   }
 
-  async setConsent(consent: ConsentState): Promise<void> {
+  async setConsent(consent: ConsentState, purposes?: ConsentPurposes): Promise<void> {
     this.assertInitialized();
-    if (this.state.consent === consent) return;
-    this.state = { ...this.state, consent };
+    const nextPurposes = normalizePurposes(purposes ?? this.state.purposes);
+    if (
+      this.state.consent === consent &&
+      JSON.stringify(this.state.purposes) === JSON.stringify(nextPurposes)
+    ) return;
+    this.state = { ...this.state, consent, purposes: nextPurposes };
     await this.persistState();
     if (consent === "granted") {
       await this.bootstrapTracking();
@@ -391,6 +424,8 @@ export class AttruviSdkClient {
       environment: this.configuration!.environment,
       platform: this.runtime.platform,
       sdkVersion: ATTRUVI_SDK_VERSION,
+      consent: "granted",
+      purposes: this.state.purposes,
       events,
       ...(identity ? { identity } : {}),
       ...(this.attribution ? { attribution: this.attribution } : {}),

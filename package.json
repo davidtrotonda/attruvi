@@ -22,6 +22,9 @@
     "test:web": "vitest run --config vitest.web.config.mjs",
     "test:schema": "node scripts/validate-supabase-schema.mjs",
     "test:db": "supabase test db",
+    "security:secrets": "node scripts/security/secret-scan.mjs",
+    "security:audit": "npm audit --audit-level=high",
+    "security:check": "npm run security:secrets && npm run security:audit",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run build:all"
   },
   "dependencies": {

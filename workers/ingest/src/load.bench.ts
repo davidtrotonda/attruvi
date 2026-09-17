@@ -26,6 +26,8 @@ const payload = JSON.stringify({
   environment: "production",
   platform: "android",
   sdkVersion: "0.1.0",
+  consent: "granted",
+  purposes: { advertising: false, analytics: true, attribution: true, personalization: false },
   events: [
     {
       eventId: "30000000-0000-4000-8000-000000000001",

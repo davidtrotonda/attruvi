@@ -46,6 +46,46 @@ export async function createInvitationAction(_state: InvitationActionState, form
 
 const roleSchema = z.object({ organizationId: z.uuid(), role: z.enum(["owner", "admin", "viewer"]), userId: z.uuid() });
 
+const privacySchema = z.object({
+  appId: z.uuid(),
+  audit: z.coerce.number().int().min(30).max(3650),
+  clicks: z.coerce.number().int().min(1).max(3650),
+  debug: z.coerce.number().int().min(1).max(90),
+  events: z.coerce.number().int().min(1).max(3650),
+  legalBasis: z.string().max(500),
+  postbacks: z.coerce.number().int().min(1).max(730),
+  probabilistic: z.boolean(),
+});
+
+export async function updatePrivacySettingsAction(formData: FormData) {
+  await requireVerifiedIdentity();
+  const parsed = privacySchema.safeParse({
+    appId: String(formData.get("app_id") ?? ""),
+    audit: formData.get("audit_days"),
+    clicks: formData.get("click_days"),
+    debug: formData.get("debug_days"),
+    events: formData.get("event_days"),
+    legalBasis: String(formData.get("legal_basis_note") ?? ""),
+    postbacks: formData.get("postback_days"),
+    probabilistic: formData.get("probabilistic") === "on",
+  });
+  if (!parsed.success) redirect("/dashboard/settings?error=privacy-invalid");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("update_app_privacy_settings", {
+    requested_app_id: parsed.data.appId,
+    requested_audit_retention_days: parsed.data.audit,
+    requested_debug_retention_days: parsed.data.debug,
+    requested_event_properties_retention_days: parsed.data.events,
+    requested_legal_basis_note: parsed.data.legalBasis || null,
+    requested_postback_detail_retention_days: parsed.data.postbacks,
+    requested_raw_click_retention_days: parsed.data.clicks,
+    requested_allow_probabilistic_attribution: parsed.data.probabilistic,
+  });
+  if (error) redirect("/dashboard/settings?error=permission");
+  revalidatePath("/dashboard/settings");
+  redirect("/dashboard/settings?saved=privacy");
+}
+
 export async function changeMemberRoleAction(formData: FormData) {
   await requireVerifiedIdentity();
   const parsed = roleSchema.safeParse({ organizationId: String(formData.get("organization_id") ?? ""), role: String(formData.get("role") ?? "viewer"), userId: String(formData.get("user_id") ?? "") });

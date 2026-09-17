@@ -144,7 +144,7 @@ async function getAnonymousUserTimeline(client: SupabaseClient, appId: string, a
     client.from("app_users").select("id,identified_at,deleted_at,first_seen_at,last_seen_at").eq("app_id", appId).eq("id", appUserId).maybeSingle(),
     client.from("app_user_metrics").select("app_user_id,installation_count,session_count,first_install_at,first_activity_at,last_activity_at,signed_up_at,first_purchase_at,revenue_reported_by_currency,revenue_verified_by_currency,ltv_observed_minor,ltv_currency,payer_status").eq("app_id", appId).eq("app_user_id", appUserId).maybeSingle(),
   ]);
-  if (profileError || metricsError) throw new Error("No se ha podido cargar el perfil anónimo.");
+  if (profileError || metricsError) throw new Error("No se ha podido cargar el perfil seudónimo.");
   if (!profile || !metrics) return null;
 
   const { data: links, error: linksError } = await client
@@ -163,7 +163,7 @@ async function getAnonymousUserTimeline(client: SupabaseClient, appId: string, a
     client.from("revenue_ledger").select("id,event_id,event_type,occurred_at,revenue_reported_minor,revenue_verified_minor,currency,validation_status,transaction_id").eq("app_id", appId).eq("app_user_id", appUserId).order("occurred_at", { ascending: true }).limit(500),
     client.from("attributions").select("installation_id,click_id,attributed_at,source_name,campaign_name").eq("app_id", appId).in("installation_id", installationIds).order("attributed_at", { ascending: true }).limit(100),
   ]);
-  if ([installationsResult, sessionsResult, eventsResult, revenueResult, attributionResult].some((result) => result.error)) throw new Error("No se ha podido construir la línea temporal anónima.");
+  if ([installationsResult, sessionsResult, eventsResult, revenueResult, attributionResult].some((result) => result.error)) throw new Error("No se ha podido construir la línea temporal seudonimizada.");
 
   const events = eventsResult.data ?? [];
   const eventIds = events.map((event) => event.id);
@@ -177,7 +177,7 @@ async function getAnonymousUserTimeline(client: SupabaseClient, appId: string, a
       ? client.from("postback_jobs").select("id,event_id,status,created_at,completed_at,attempt_count").eq("app_id", appId).in("event_id", eventIds).order("created_at", { ascending: true }).limit(500)
       : Promise.resolve({ data: [], error: null }),
   ]);
-  if (clicksResult.error || postbacksResult.error) throw new Error("No se ha podido completar la línea temporal anónima.");
+  if (clicksResult.error || postbacksResult.error) throw new Error("No se ha podido completar la línea temporal seudonimizada.");
 
   const timeline: TimelineItem[] = [];
   for (const click of clicksResult.data ?? []) {

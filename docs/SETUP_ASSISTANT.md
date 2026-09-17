@@ -23,7 +23,7 @@ La UI refresca cada 3,5 segundos y muestra validación, paso por Queue, persiste
 
 ## Prueba segura
 
-`create_development_test_event` construye una instalación anónima y un evento válido, y los pasa por `ingest_sdk_messages_v3`. Está limitada a owner/admin y diez trazas recientes por minuto. Las conversiones de development crean una fila outbox `skipped` con motivo `development_dry_run`; el Worker no puede reclamarlas ni contactar a Google, Meta o TikTok.
+`create_development_test_event` construye una instalación seudónima limitada a la app y un evento válido, y los pasa por `ingest_sdk_messages_v3`. Está limitada a owner/admin y diez trazas recientes por minuto. Las conversiones de development crean una fila outbox `skipped` con motivo `development_dry_run`; el Worker no puede reclamarlas ni contactar a Google, Meta o TikTok.
 
 ## Archivo descargable
 

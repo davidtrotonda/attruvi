@@ -38,7 +38,7 @@ Una fila diaria representa una **cohorte de adquisición**: las instalaciones cu
 
 ## Identidad, atribución y datos tardíos
 
-Los usuarios anónimos participan desde la instalación. Cuando `identify` los relaciona de forma segura con un usuario conocido, el historial permanece unido y los agregados se pueden recalcular. Attruvi no fusiona dos identidades conocidas diferentes.
+Los perfiles aún no identificados participan desde la instalación mediante un UUID persistente limitado a esa app; es un seudónimo, no anonimato irreversible. Cuando `identify` los relaciona de forma segura con un usuario conocido, el historial permanece unido y los agregados se pueden recalcular. Attruvi no fusiona dos identidades conocidas diferentes.
 
 Cada resultado conserva la atribución de adquisición vigente: `source → campaign → ad_group → ad`. El nivel `app` permite obtener totales exactos sin sumar niveles que se solapan. El filtro de plataforma excluye gasto sin plataforma conocida; Attruvi no reparte ese gasto inventando una proporción.
 

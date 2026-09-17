@@ -1,6 +1,7 @@
 import type {
   AttruviIdentity,
   AttruviPlatform,
+  ConsentPurposes,
   ConsentState,
 } from "./types.js";
 
@@ -56,6 +57,7 @@ export interface RuntimeAdapter {
 export interface PersistedSdkState {
   readonly version: 1;
   readonly consent: ConsentState;
+  readonly purposes: ConsentPurposes;
   readonly installTracked: boolean;
   readonly lastBackgroundAt: number | null;
 }

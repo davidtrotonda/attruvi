@@ -1,5 +1,11 @@
 export type AttruviEnvironment = "development" | "staging" | "production";
 export type ConsentState = "unknown" | "granted" | "denied";
+export interface ConsentPurposes {
+  readonly analytics: boolean;
+  readonly attribution: boolean;
+  readonly advertising: boolean;
+  readonly personalization: boolean;
+}
 export type AttruviPlatform = "ios" | "android";
 
 export type JsonPrimitive = string | number | boolean | null;
@@ -17,6 +23,7 @@ export interface AttruviConfiguration {
   readonly endpoint: string;
   readonly environment: AttruviEnvironment;
   readonly consent: ConsentState;
+  readonly purposes?: ConsentPurposes;
   readonly propertyAllowlist?: PropertyAllowlist;
   readonly sessionTimeoutMs?: number;
   readonly flushAt?: number;
@@ -74,6 +81,8 @@ export interface AttruviEventBatch {
   readonly environment: AttruviEnvironment;
   readonly platform: AttruviPlatform;
   readonly sdkVersion: string;
+  readonly consent: "granted";
+  readonly purposes: ConsentPurposes;
   readonly identity?: AttruviIdentity;
   readonly attribution?: AttruviAttribution;
   readonly events: readonly AttruviEvent[];
@@ -92,7 +101,7 @@ export interface AttruviPublicApi {
   track(name: string, properties?: EventProperties, options?: TrackOptions): Promise<string | null>;
   identify(userId: string, traits?: EventProperties): Promise<void>;
   resetIdentity(): Promise<void>;
-  setConsent(state: ConsentState): Promise<void>;
+  setConsent(state: ConsentState, purposes?: ConsentPurposes): Promise<void>;
   getAttribution(): Promise<AttruviAttribution | null>;
   flush(): Promise<FlushResult>;
   onAttributionChanged(listener: AttributionListener): () => void;

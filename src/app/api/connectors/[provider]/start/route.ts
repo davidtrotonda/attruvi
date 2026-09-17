@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getVerifiedIdentity } from "@/lib/auth/session";
@@ -20,6 +20,13 @@ export async function GET(request: Request, context: { params: Promise<{ provide
   if (!environment.configured) return NextResponse.redirect(new URL(`/dashboard/costs?app=${app.id}&setup=${provider}`, url));
 
   const state = randomBytes(32).toString("base64url");
+  const stateHash = createHash("sha256").update(state).digest("hex");
+  const { error: stateError } = await client.rpc("issue_connector_oauth_state", {
+    requested_app_id: app.id,
+    requested_provider: provider,
+    requested_state_hash: stateHash,
+  });
+  if (stateError) return NextResponse.redirect(new URL(`/dashboard/costs?app=${app.id}&error=permission`, url));
   const cookieStore = await cookies();
   cookieStore.set("attruvi_connector_oauth", Buffer.from(JSON.stringify({ appId: app.id, provider, state })).toString("base64url"), {
     httpOnly: true,

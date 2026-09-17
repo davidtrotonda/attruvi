@@ -5,6 +5,7 @@ import type {
   AttruviConfiguration,
   AttruviPublicApi,
   AttributionListener,
+  ConsentPurposes,
   ConsentState,
   EventProperties,
   FlushResult,
@@ -56,8 +57,8 @@ export const Attruvi: AttruviPublicApi = {
     return requireClient().resetIdentity();
   },
 
-  setConsent(state: ConsentState): Promise<void> {
-    return requireClient().setConsent(state);
+  setConsent(state: ConsentState, purposes?: ConsentPurposes): Promise<void> {
+    return requireClient().setConsent(state, purposes);
   },
 
   getAttribution(): Promise<AttruviAttribution | null> {

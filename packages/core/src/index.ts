@@ -185,6 +185,17 @@ const sdkJsonValueSchema: z.ZodType<SdkJsonValue> = z.lazy(() =>
 
 export const sdkEnvironmentSchema = z.enum(["development", "staging", "production"]);
 export const sdkPlatformSchema = z.enum(["ios", "android"]);
+export const consentPurposeFlagsSchema = z
+  .object({
+    analytics: z.boolean(),
+    attribution: z.boolean(),
+    advertising: z.boolean(),
+    personalization: z.boolean(),
+  })
+  .strict()
+  .refine((value) => !value.advertising || value.attribution, {
+    message: "advertising requiere attribution",
+  });
 export const attributionScopeSchema = z.enum(["acquisition", "reengagement"]);
 export const attributionMatchTypeSchema = z.enum([
   "direct_link",
@@ -285,6 +296,8 @@ export const sdkEventBatchSchema = z
     environment: sdkEnvironmentSchema,
     platform: sdkPlatformSchema,
     sdkVersion: z.string().min(1).max(64),
+    consent: z.literal("granted"),
+    purposes: consentPurposeFlagsSchema,
     identity: z
       .object({
         userId: z.string().min(1).max(255),
@@ -317,6 +330,7 @@ const sdkClientContextSchema = z
 
 export const sdkInstallationSchema = sdkClientContextSchema.extend({
   consent: z.enum(["granted", "limited"]),
+  purposes: consentPurposeFlagsSchema,
   attribution: sdkAttributionSchema.optional(),
 });
 

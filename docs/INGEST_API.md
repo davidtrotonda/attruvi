@@ -11,7 +11,7 @@ SDK → límites de cuerpo → appKey cacheada → contrato/PII/reloj → rate l
                          ↘ dead-letter segura, sin payload, si el fallo es permanente
 ```
 
-La `appKey` identifica app y entorno, pero es pública. Nunca se usa como autorización de lectura. `GET /v1/attribution` exige además el token opaco emitido por `POST /v1/installations`; Supabase solo guarda su SHA-256. Las identidades de usuario y anónimas también se guardan hasheadas.
+La `appKey` identifica app y entorno, pero es pública. Nunca se usa como autorización de lectura. `GET /v1/attribution` exige además el token opaco emitido por `POST /v1/installations`; Supabase solo guarda su SHA-256. Las identidades declaradas y los `anonymous_id` se guardan hasheados; este último sigue siendo un seudónimo persistente limitado a la app, no anonimato irreversible.
 
 Se aceptan relojes de dispositivo atrasados hasta 365 días. Un evento más de diez minutos en el futuro se rechaza con `422`. Esto evita perder actividad offline legítima sin aceptar fechas arbitrarias.
 

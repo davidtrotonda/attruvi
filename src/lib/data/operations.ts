@@ -113,8 +113,8 @@ export async function getSettingsDashboard(identity: VerifiedIdentity, selection
   const context = await getDashboardContext(identity, selection);
   const organization = context.organization;
   const app = context.selectedApp;
-  if (!organization) return { ...context, invitations: [], members: [], platforms: [], sdkKeys: [] };
-  const [teamResult, invitationsResult, platformsResult, keysResult] = await Promise.all([
+  if (!organization) return { ...context, invitations: [], members: [], platforms: [], privacy: null, sdkKeys: [] };
+  const [teamResult, invitationsResult, platformsResult, keysResult, privacyResult] = await Promise.all([
     context.client.rpc("read_organization_team", { requested_organization_id: organization.id }),
     context.role === "owner"
       ? context.client.from("organization_invitations").select("id,email,role,status,expires_at,created_at").eq("organization_id", organization.id).eq("status", "pending").order("created_at", { ascending: false })
@@ -125,13 +125,17 @@ export async function getSettingsDashboard(identity: VerifiedIdentity, selection
     app
       ? context.client.from("public_sdk_keys").select("id,visible_prefix,environment,status,last_used_at,created_at").eq("app_id", app.id).order("created_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
+    app
+      ? context.client.from("app_privacy_settings").select("raw_click_retention_days,event_properties_retention_days,debug_retention_days,postback_detail_retention_days,audit_retention_days,allow_probabilistic_attribution,legal_basis_note").eq("app_id", app.id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
-  if (teamResult.error || invitationsResult.error || platformsResult.error || keysResult.error) throw new Error("No se han podido cargar los ajustes.");
+  if (teamResult.error || invitationsResult.error || platformsResult.error || keysResult.error || privacyResult.error) throw new Error("No se han podido cargar los ajustes.");
   return {
     ...context,
     invitations: invitationsResult.data ?? [],
     members: (teamResult.data ?? []) as TeamMember[],
     platforms: platformsResult.data ?? [],
+    privacy: privacyResult.data,
     sdkKeys: keysResult.data ?? [],
   };
 }

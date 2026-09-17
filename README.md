@@ -6,18 +6,19 @@ Web: [attruvi.com](https://attruvi.com)
 
 El objetivo es conectar campañas publicitarias con instalaciones, compras, ingresos y retención, y devolver conversiones válidas a Google Ads, Meta Ads y TikTok Ads.
 
-> Estado: primera etapa pública. Todavía no está listo para producción.
+> Estado: MVP técnico completo y auditable, todavía **no listo para integrar en apps reales**. Faltan credenciales/aprobaciones de redes, verificadores activos de App Attest/Play Integrity, builds nativos en dispositivos y revisión jurídica.
 
 ## Alcance inicial
 
 - SDK para React Native en iOS y Android.
 - Atribución de instalaciones y actividad posterior: sesiones, registro, compras, suscripciones, reembolsos y LTV observado.
-- Explorador anonimizado de usuarios con el recorrido clic → instalación → sesiones → ingresos → postbacks.
+- Explorador de perfiles seudónimos por app con el recorrido clic → instalación → sesiones → ingresos → postbacks.
 - Medición de ingresos, ROAS, LTV y retención.
 - Dashboard de decisiones con comparación de periodos, jerarquía campaña → grupo → anuncio, estados de calidad de datos, filtros compartibles y gestión de equipos owner/admin/viewer.
 - Importación de costes de Google Ads, Meta Ads y TikTok Ads, además de entrada diaria, por rango y CSV.
 - Postbacks server-side para Google Ads, Meta Ads y TikTok Ads.
 - Despliegue propio y trazabilidad completa de los datos.
+- Consentimiento por finalidad, exportación/borrado, retención configurable, auditoría administrativa y aislamiento multi-tenant por RLS.
 
 ## Landing
 
@@ -42,9 +43,12 @@ Abre `http://localhost:3000`.
 ```bash
 npm install
 npm run verify
+npm run security:check
 ```
 
 La arquitectura y el estado real están en `docs/ARCHITECTURE.md` y `docs/BUILD_STATUS.md`.
+
+La instalación propia está en `docs/SELF_HOSTING.md`. La auditoría redactada y el modelo de amenazas están en `docs/SECURITY_AUDIT.md` y `docs/THREAT_MODEL.md`.
 
 La configuración de Supabase Auth, Google OAuth y sus URLs de retorno está en `docs/AUTH_SETUP.md`.
 
@@ -62,4 +66,4 @@ Las fórmulas exactas de CPI, CAC, ROAS, retención, conversiones y LTV, junto c
 
 ## Licencia
 
-MIT
+[MIT](LICENSE). Las contribuciones siguen [CONTRIBUTING.md](CONTRIBUTING.md), el [código de conducta](CODE_OF_CONDUCT.md) y la [divulgación responsable](SECURITY.md).

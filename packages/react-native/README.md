@@ -47,6 +47,12 @@ await Attruvi.initialize({
   endpoint: "https://ingest.attruvi.com",
   environment: "production",
   consent: "granted",
+  purposes: {
+    analytics: true,
+    attribution: true,
+    advertising: false, // Actívalo solo con una base legal válida para postbacks.
+    personalization: false,
+  },
   propertyAllowlist: {
     all: ["screen"],
     events: {

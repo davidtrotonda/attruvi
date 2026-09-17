@@ -348,6 +348,8 @@ export default function Home() {
         <div>
           <a href={githubUrl} target="_blank" rel="noreferrer">GitHub</a>
           <a href="#preguntas">Preguntas</a>
+          <a href="/privacy">Privacidad</a>
+          <a href="/terms">Términos</a>
           <span>© 2026 Attruvi</span>
         </div>
       </footer>

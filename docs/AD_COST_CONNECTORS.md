@@ -58,7 +58,8 @@ Cada sincronización diaria relee tres días por defecto, configurable entre 0 y
 Define en Vercel, solo en servidor:
 
 ```text
-CONNECTOR_ENCRYPTION_KEY=<32 bytes aleatorios en base64>
+CONNECTOR_ENCRYPTION_KEYS=<JSON con versiones y claves aleatorias de 32 bytes en base64>
+CONNECTOR_ENCRYPTION_ACTIVE_KEY_VERSION=<versión usada para cifrar escrituras nuevas>
 CRON_SECRET=<cadena aleatoria larga>
 GOOGLE_ADS_CLIENT_ID=<OAuth web client id>
 GOOGLE_ADS_CLIENT_SECRET=<OAuth client secret>

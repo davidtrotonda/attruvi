@@ -39,6 +39,8 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 - Los miembros autenticados leen únicamente organizaciones verificadas mediante `organization_members`. Los roles `owner` y `admin` administran configuración.
 - Los identificadores publicitarios y pruebas de atribución no implican exactitud absoluta. Cada atribución conserva método, confianza, evidencia y versión de reglas.
 - iOS y Android pueden limitar señales. No se realizará fingerprinting oculto ni se elevará una coincidencia probabilística a determinista.
+- Los UUID de usuario e instalación son seudónimos persistentes dentro de una app, no anonimato irreversible. Retención y borrado eliminan su capacidad de enlace cuando dejan de ser necesarios.
+- Analítica, atribución, publicidad y personalización son finalidades independientes. Un postback exige el flag publicitario además de una señal determinista permitida.
 
 ## Flujo de datos y fallos
 
@@ -86,7 +88,7 @@ React Native SDK
 
 `GET /v1/attribution` no acepta solo la appKey. Exige `installation_id` y el token emitido al registrar esa instalación; Postgres conserva únicamente su hash. App Attest/Play Integrity tiene un punto de extensión y un modo `required` que falla de forma cerrada, pero el MVP no finge validar un token hasta conectar los verificadores oficiales.
 
-La actividad posterior usa dos capas. `events` y `sessions` conservan el mensaje original del SDK; `activity_sessions`, `revenue_ledger` y las métricas son proyecciones reconstruibles. Esta separación permite insertar un evento atrasado sin alterar arbitrariamente el historial contable. `identify` solo fusiona un perfil anónimo con el mismo hash conocido y bloquea cualquier conflicto entre dos identidades conocidas.
+La actividad posterior usa dos capas. `events` y `sessions` conservan el mensaje original del SDK; `activity_sessions`, `revenue_ledger` y las métricas son proyecciones reconstruibles. Esta separación permite insertar un evento atrasado sin alterar arbitrariamente el historial contable. `identify` solo fusiona un perfil seudónimo limitado a la app con el mismo hash conocido y bloquea cualquier conflicto entre dos identidades conocidas.
 
 ## Motor de atribución
 

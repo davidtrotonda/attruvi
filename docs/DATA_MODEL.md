@@ -10,7 +10,7 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 | Apps | `apps`, `app_platforms`, `public_sdk_keys` | Configuración, identificadores iOS/Android y claves públicas hasheadas/revocables |
 | Jerarquía publicitaria | `sources`, `campaigns`, `ad_groups`, `ads` | Fuente → campaña → grupo → anuncio con claves externas y consistencia de tenant |
 | Enlaces | `smart_links`, `link_destinations`, `link_clicks` | Configuración, destinos y clics idempotentes |
-| Identidad y atribución | `installations`, `identities`, `app_users`, `app_user_installations`, `attribution_rule_sets`, `attribution_candidates`, `attributions` | Instalaciones anónimas, unión segura tras `identify`, reglas y decisiones versionadas |
+| Identidad y atribución | `installations`, `identities`, `app_users`, `app_user_installations`, `attribution_rule_sets`, `attribution_candidates`, `attributions` | Instalaciones seudónimas limitadas a una app, unión segura tras `identify`, reglas y decisiones versionadas |
 | Actividad e ingresos | `events`, `sessions`, `activity_sessions`, `revenue_ledger`, `revenue_validations`, `subscription_events`, `subscriptions` | Log de transporte, sesiones reconstruibles, contabilidad exacta y estado de suscripción |
 | Calidad de usuario | `installation_activity_metrics`, `app_user_metrics`, `push_token_invalidations`, `uninstall_inferences` | Sesiones, actividad, registro, LTV por moneda e inferencias basadas en señales reales |
 | Costes | `connector_accounts`, `connector_sync_runs`, `ad_costs`, `ad_cost_mappings`, `private.connector_secrets` | Configuración pública minimizada, jobs, gasto diario, asignaciones y tokens cifrados fuera del esquema expuesto |

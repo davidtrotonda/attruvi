@@ -70,6 +70,7 @@ const requiredTables = [
   "metric_rollup_runs",
   "metric_reconciliation_runs",
   "development_debug_events",
+  "app_privacy_settings",
   "audit_log",
 ];
 
@@ -186,6 +187,10 @@ for (const proof of [
   "conservan los datos raw",
   "recorrido demo desde cero",
   "postback dry-run",
+  "replay OAuth se rechaza",
+  "todas las tablas públicas tienen RLS activado",
+  "viewer no cambia retención",
+  "outsider no exporta datos",
 ]) {
   assert.match(databaseTests, new RegExp(proof, "i"), `falta la prueba: ${proof}`);
 }

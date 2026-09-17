@@ -149,6 +149,7 @@ await Attruvi.initialize({
   endpoint: "${input.endpoint}",
   environment: "development",
   consent: "granted",
+  purposes: { analytics: true, attribution: true, advertising: false, personalization: false },
 });
 \`\`\`
 

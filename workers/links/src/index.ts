@@ -6,10 +6,12 @@ import {
   type SmartLinkConfig,
 } from "./contracts";
 import { createSmartLinkHandler, type LinkRuntime } from "./router";
+import { assertLinksEnvironment, secureResponse } from "./environment";
 
 const linkCachePrefix = "smart-link:v1:";
 const missingCachePrefix = "smart-link-missing:v1:";
 const dedupeCachePrefix = "click-dedupe:v1:";
+const adminReplayPrefix = "admin-replay:v1:";
 
 function positiveInteger(value: string, fallback: number, maximum: number) {
   const parsed = Number(value);
@@ -164,6 +166,22 @@ async function readBoundedJson(request: Request, maximumBytes: number) {
   }
 }
 
+async function expectedAdminSignature(token: string, timestamp: string, nonce: string, body: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(token),
+    { hash: "SHA-256", name: "HMAC" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`${timestamp}.${nonce}.${body}`),
+  );
+  return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 async function handleCachePurge(request: Request, env: Env) {
   if (request.method !== "POST") {
     return Response.json({ code: "method_not_allowed" }, { status: 405 });
@@ -172,12 +190,29 @@ async function handleCachePurge(request: Request, env: Env) {
   if (!token || !(await secureEqual(token, env.LINKS_SYNC_TOKEN))) {
     return Response.json({ code: "unauthorized" }, { status: 401 });
   }
+  const timestamp = request.headers.get("x-attruvi-timestamp") ?? "";
+  const nonce = request.headers.get("x-attruvi-nonce") ?? "";
+  const signature = request.headers.get("x-attruvi-signature") ?? "";
+  const timestampValue = Number(timestamp);
+  if (
+    !Number.isSafeInteger(timestampValue) ||
+    Math.abs(Date.now() - timestampValue) > 5 * 60_000 ||
+    !/^[0-9a-f-]{36}$/i.test(nonce) ||
+    !/^[0-9a-f]{64}$/i.test(signature)
+  ) {
+    return Response.json({ code: "invalid_request_signature" }, { status: 401 });
+  }
+  const replayKey = `${adminReplayPrefix}${nonce}`;
+  if (await env.LINKS_KV.get(replayKey)) {
+    return Response.json({ code: "replayed_request" }, { status: 409 });
+  }
 
   const declaredLength = Number(request.headers.get("content-length") ?? 0);
   if (declaredLength > 4_096) {
     return Response.json({ code: "request_too_large" }, { status: 413 });
   }
   let payload: unknown;
+  const verificationRequest = request.clone();
   try {
     payload = await readBoundedJson(request, 4_096);
   } catch (error) {
@@ -186,6 +221,12 @@ async function handleCachePurge(request: Request, env: Env) {
     }
     throw error;
   }
+  const rawBody = await verificationRequest.text();
+  const expectedSignature = await expectedAdminSignature(env.LINKS_SYNC_TOKEN, timestamp, nonce, rawBody);
+  if (!(await secureEqual(signature, expectedSignature))) {
+    return Response.json({ code: "invalid_request_signature" }, { status: 401 });
+  }
+  await env.LINKS_KV.put(replayKey, "1", { expirationTtl: 600 });
   const slugs =
     payload && typeof payload === "object" && "slugs" in payload && Array.isArray(payload.slugs)
       ? payload.slugs
@@ -273,11 +314,12 @@ export default {
     const url = new URL(request.url);
     try {
       const association = associationResponse(url.pathname);
-      if (association) return association;
+      if (association) return secureResponse(association);
+      assertLinksEnvironment(env);
       if (url.pathname === "/__admin/cache/purge") {
-        return await handleCachePurge(request, env);
+        return secureResponse(await handleCachePurge(request, env));
       }
-      return await createSmartLinkHandler(createCloudflareRuntime(env))(request);
+      return secureResponse(await createSmartLinkHandler(createCloudflareRuntime(env))(request));
     } catch (error) {
       console.error(
         JSON.stringify({
@@ -293,6 +335,7 @@ export default {
     }
   },
   async queue(batch: MessageBatch<ClickMessage>, env: Env): Promise<void> {
+    assertLinksEnvironment(env);
     await persistClickBatch(batch, env);
   },
 } satisfies ExportedHandler<Env, ClickMessage>;

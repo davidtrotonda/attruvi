@@ -3,11 +3,13 @@ import { type DeadLetter, type QueuedIngestMessage } from "./contracts";
 import { createIngestHandler } from "./router";
 import { createCloudflareRuntime, writeMetric } from "./runtime";
 import { persistIngestMessages } from "./supabase";
+import { assertIngestEnvironment, secureIngestResponse } from "./environment";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
-      return await createIngestHandler(createCloudflareRuntime(env))(request);
+      assertIngestEnvironment(env);
+      return secureIngestResponse(await createIngestHandler(createCloudflareRuntime(env))(request));
     } catch (error) {
       const requestId = crypto.randomUUID();
       console.error(
@@ -26,6 +28,7 @@ export default {
     }
   },
   async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
+    assertIngestEnvironment(env);
     await consumeIngestBatch(batch, {
       persist: (messages: readonly QueuedIngestMessage[]) => persistIngestMessages(env, messages),
       async deadLetter(message: DeadLetter) {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireVerifiedIdentity } from "@/lib/auth/session";
 import { getUserExplorer, shortIdentifier } from "@/lib/data/users";
+import { eraseAppUserAction } from "./actions";
 
 const payerLabels: Record<string, string> = {
   never_paid: "Sin pagos", refunded: "Reembolsado", reported: "Pago declarado", verified: "Pago verificado",
@@ -56,7 +57,7 @@ export default async function UsersPage({ searchParams }: {
 
         <div className="user-explorer-layout">
           <section className="dashboard-table-card user-list-card">
-            <div className="dashboard-table-scroll"><table><thead><tr><th>Usuario anónimo</th><th>Instalaciones</th><th>Sesiones</th><th>Última actividad</th><th>LTV observado</th></tr></thead><tbody>
+            <div className="dashboard-table-scroll"><table><thead><tr><th>Perfil seudónimo</th><th>Instalaciones</th><th>Sesiones</th><th>Última actividad</th><th>LTV observado</th></tr></thead><tbody>
               {explorer.users.map((user) => <tr className={params.user === user.app_user_id ? "selected" : undefined} key={user.app_user_id}>
                 <td><Link href={href({ app: explorer.selectedApp!.slug, environment: params.environment, page: explorer.filters.page, payer: explorer.filters.payer, platform: explorer.filters.platform, user: user.app_user_id, workspace: explorer.organization.slug })}><i className={`user-status status-${user.payer_status}`} aria-hidden="true" /><span><strong>{shortIdentifier(user.app_user_id)}</strong><small>{payerLabels[user.payer_status]}</small></span></Link></td>
                 <td>{user.installation_count}</td><td>{user.session_count}</td><td>{dateTime(user.last_activity_at)}</td><td><strong>{money(user.ltv_observed_minor, user.ltv_currency)}</strong></td>
@@ -80,6 +81,15 @@ export default async function UsersPage({ searchParams }: {
                 <div><span>LTV observado</span><strong>{money(explorer.detail.metrics.ltv_observed_minor, explorer.detail.metrics.ltv_currency)}</strong></div>
               </div>
               <ol className="user-timeline">{explorer.detail.timeline.map((item) => <li className={`timeline-${item.kind}`} key={item.id}><i aria-hidden="true" /><div><span>{kindLabels[item.kind]}</span><strong>{item.label}</strong><p>{item.detail}</p>{item.meta ? <small>{item.meta}</small> : null}</div><time>{dateTime(item.at)}</time></li>)}</ol>
+              <div className="user-privacy-actions">
+                <a href={`/api/private/privacy/export?app=${encodeURIComponent(explorer.selectedApp.id)}&app_user=${encodeURIComponent(explorer.detail.profile.id)}`}>Exportar datos</a>
+                <form action={eraseAppUserAction}>
+                  <input name="app_id" type="hidden" value={explorer.selectedApp.id} />
+                  <input name="app_user_id" type="hidden" value={explorer.detail.profile.id} />
+                  <label><input required type="checkbox" /> Entiendo que se borrarán los identificadores del perfil.</label>
+                  <button name="confirmation" type="submit" value="erase">Borrar y anonimizar</button>
+                </form>
+              </div>
               {explorer.detail.timeline.length === 0 ? <div className="dashboard-empty"><p>Este perfil todavía no tiene actividad procesada.</p></div> : null}
             </> : <div className="user-detail-placeholder"><span aria-hidden="true">⌁</span><h2>Selecciona un usuario</h2><p>Verás su recorrido completo sin datos personales.</p></div>}
           </aside>

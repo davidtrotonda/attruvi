@@ -101,7 +101,7 @@ Estado: aceptada. `events` conserva el transporte idempotente. La agrupación de
 
 ## ADR-024 — Identidad explícita sin fusión probabilística
 
-Estado: aceptada. Una instalación comienza anónima. `identify` puede asignar el primer hash conocido o unir una reinstalación al mismo hash; si el perfil ya tiene otro hash, falla. No se fusionan perfiles por IP, dispositivo, similitud o atribución. El borrado elimina identificadores y conserva únicamente el historial anonimizado necesario para métricas y contabilidad.
+Estado: aceptada. Una instalación comienza con un perfil seudónimo persistente y limitado a esa app; no es anonimato irreversible. `identify` puede asignar el primer hash conocido o unir una reinstalación al mismo hash; si el perfil ya tiene otro hash, falla. No se fusionan perfiles por IP, dispositivo, similitud o atribución. El borrado elimina identificadores y conserva únicamente el historial ya desvinculado necesario para métricas y contabilidad.
 
 ## ADR-025 — Libro mayor en lugar de saldos mutables
 
@@ -117,7 +117,7 @@ Estado: aceptada. Google Ads usa `v25`, Meta Marketing API `v26.0` y TikTok Mark
 
 ## ADR-028 — Tokens cifrados fuera del esquema expuesto
 
-Estado: aceptada. Los tokens OAuth se cifran en servidor mediante AES-256-GCM con una clave base64 de 32 bytes en `CONNECTOR_ENCRYPTION_KEY` y el ID de cuenta como datos autenticados adicionales. Postgres guarda ciphertext e IV en `private.connector_secrets`; las tablas públicas solo conservan referencia, caducidad y últimos cuatro caracteres de un identificador no sensible. Las RPC de secretos son exclusivas de `service_role` y ningún payload o token se registra.
+Estado: aceptada. Los tokens OAuth se cifran en servidor mediante AES-256-GCM con una clave base64 de 32 bytes y el ID de cuenta como datos autenticados adicionales. El llavero versionado definido en ADR-043 reemplaza la variable única inicial; esta solo se admite durante la transición. Postgres guarda ciphertext e IV en `private.connector_secrets`; las tablas públicas solo conservan referencia, caducidad y últimos cuatro caracteres de un identificador no sensible. Las RPC de secretos son exclusivas de `service_role` y ningún payload o token se registra.
 
 ## ADR-029 — Gasto diario corregible y sin FX implícito
 
@@ -170,3 +170,19 @@ Estado: aceptada. Google se prueba con `validate_only` y Meta con `test_event_co
 ## ADR-041 — Setup real en development y claves de una sola visualización
 
 Estado: aceptada. El asistente deriva el progreso de filas autoritativas y no de casillas manuales. La appKey es pública, pero solo se devuelve completa al crearla; el servidor envía a la RPC su SHA-256 y Postgres conserva hash, prefijo, ámbito y revocación. La rotación es transaccional y auditada. Las dos RPC nuevas usan `SECURITY DEFINER` para efectuar operaciones atómicas que las policies normales no pueden expresar, fijan `search_path`, exigen `auth.uid()`, verifican membresía owner/admin y limitan su `EXECUTE` a `authenticated`/`service_role`. Las pruebas atraviesan ingestión y actividad reales bajo `development`; cualquier outbox resultante nace `skipped` con `development_dry_run`, por lo que nunca puede salir hacia una red. Las trazas del Debugger son temporales, anonimizadas y aisladas por RLS.
+
+## ADR-042 — Consentimiento por finalidad y seudónimos explícitos
+
+Estado: aceptada. `granted` no implica por sí solo publicidad. El SDK transmite flags separados para analítica, atribución, publicidad y personalización; publicidad requiere atribución. Un postback solo es elegible cuando `advertising=true`. Los UUID persistentes se describen como seudónimos limitados a una app, nunca como anonimato irreversible.
+
+## ADR-043 — Llavero versionado para tokens OAuth
+
+Estado: aceptada. AES-256-GCM mantiene el ID de cuenta como AAD y selecciona la clave por `key_version`. `CONNECTOR_ENCRYPTION_KEYS` conserva versiones anteriores durante la rotación y `CONNECTOR_ENCRYPTION_ACTIVE_KEY_VERSION` cifra escrituras nuevas. Revocar elimina el ciphertext y desactiva la cuenta; el valor nunca entra en logs o tablas expuestas.
+
+## ADR-044 — Retención minimizada, no destrucción de métricas
+
+Estado: aceptada. Los plazos por app borran detalles del debugger y seudonimizan identificadores de clic, propiedades de evento y respuestas de postback. Importes y contadores necesarios para contabilidad/agregados se conservan sin sus identificadores de negocio. El borrado de un perfil invalida tokens, hashes e IDs externos y deja una auditoría sin guardar el valor eliminado.
+
+## ADR-045 — Operaciones administrativas resistentes a replay
+
+Estado: aceptada. OAuth usa un estado aleatorio cuyo SHA-256 se registra con usuario/app/proveedor y se consume una sola vez. La purga KV exige bearer, HMAC del cuerpo, timestamp de cinco minutos y nonce almacenado diez minutos. Los eventos del SDK mantienen replay idempotente por `event_id`, idempotency key y transacción/compra.

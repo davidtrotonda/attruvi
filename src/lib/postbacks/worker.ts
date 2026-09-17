@@ -77,7 +77,7 @@ async function buildDelivery(job: Job): Promise<DeliveryContext> {
   if (!isRemoteConnectorProvider(destination.provider)) throw new PostbackDeliveryError("configuration", "Unsupported postback provider.", { providerCode: "provider_unsupported" });
 
   const [{ data: installation, error: installationError }, { data: account, error: accountError }] = await Promise.all([
-    service.from("installations").select("consent_state").eq("id", eventRow.installation_id).single(),
+    service.from("installations").select("consent_state,consent_advertising").eq("id", eventRow.installation_id).single(),
     service.from("connector_accounts").select("id,provider,external_account_id,login_customer_id,connection_state").eq("id", destination.connector_account_id).single(),
   ]);
   if (installationError || !installation) throw new PostbackDeliveryError("configuration", "The installation is unavailable.", { providerCode: "installation_unavailable" });
@@ -134,7 +134,9 @@ async function buildDelivery(job: Job): Promise<DeliveryContext> {
     event: {
       click,
       ...(clickOccurredAt ? { clickOccurredAt } : {}),
-      consent: installation.consent_state,
+      consent: installation.consent_state === "granted" && installation.consent_advertising === true
+        ? "granted"
+        : "limited",
       ...(currency ? { currency } : {}),
       eventName: eventRow.name,
       eventTime: eventRow.occurred_at,

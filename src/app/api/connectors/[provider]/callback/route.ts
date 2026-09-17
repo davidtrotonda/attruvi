@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getVerifiedIdentity } from "@/lib/auth/session";
 import { discoverAllAccounts, exchangeAuthorizationCode } from "@/lib/connectors/oauth";
@@ -30,6 +31,15 @@ export async function GET(request: Request, context: { params: Promise<{ provide
   const identity = await getVerifiedIdentity();
   if (!identity) return NextResponse.redirect(new URL("/?auth=required&next=/dashboard/costs", url));
   const userClient = await createSupabaseServerClient();
+  const stateHash = createHash("sha256").update(saved.state).digest("hex");
+  const { data: consumed, error: consumeError } = await userClient.rpc("consume_connector_oauth_state", {
+    requested_app_id: saved.appId,
+    requested_provider: provider,
+    requested_state_hash: stateHash,
+  });
+  if (consumeError || consumed !== true) {
+    return NextResponse.redirect(new URL("/dashboard/costs?error=oauth_state", url));
+  }
   const { data: app } = await userClient.from("apps").select("id,organization_id").eq("id", saved.appId).maybeSingle();
   if (!app) return NextResponse.redirect(new URL("/dashboard/costs?error=app", url));
 

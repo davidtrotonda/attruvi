@@ -4,8 +4,8 @@ Esta capa convierte los mensajes del SDK en un historial reproducible. `events` 
 
 ## Identidad sin PII
 
-- Cada instalación empieza con un `app_user` anónimo y una relación en `app_user_installations`.
-- `identify(userId)` guarda únicamente SHA-256. Si el perfil era anónimo, adopta la identidad conocida sin mover ni borrar sus eventos.
+- Cada instalación empieza con un `app_user` seudónimo, persistente solo dentro de esa app, y una relación en `app_user_installations`; no es anonimato irreversible.
+- `identify(userId)` guarda únicamente SHA-256. Si el perfil aún no estaba identificado, adopta la identidad conocida sin mover ni borrar sus eventos.
 - Una reinstalación que declara el mismo hash se enlaza al perfil conocido y conserva ambas instalaciones.
 - Si una instalación ya está unida a otro hash conocido, la operación falla con `identity_conflict`; Attruvi nunca fusiona dos usuarios conocidos por aproximación.
 - `erase_app_user` elimina hashes y traits, marca el perfil como borrado y conserva eventos e importes anonimizados para no romper el libro contable.

@@ -114,9 +114,10 @@ components:
       allOf:
         - $ref: "#/components/schemas/ClientContext"
         - type: object
-          required: [consent]
+          required: [consent, purposes]
           properties:
             consent: { type: string, enum: [granted, limited] }
+            purposes: { $ref: "#/components/schemas/ConsentPurposes" }
             attribution: { type: object, additionalProperties: true }
     Identify:
       allOf:
@@ -140,18 +141,29 @@ components:
         properties: { type: object, additionalProperties: true }
     EventBatch:
       type: object
-      required: [batchId, sentAt, environment, platform, sdkVersion, events]
+      required: [batchId, sentAt, environment, platform, sdkVersion, consent, purposes, events]
       properties:
         batchId: { type: string, format: uuid }
         sentAt: { type: string, format: date-time }
         environment: { type: string, enum: [development, staging, production] }
         platform: { type: string, enum: [ios, android] }
         sdkVersion: { type: string, maxLength: 64 }
+        consent: { type: string, enum: [granted] }
+        purposes: { $ref: "#/components/schemas/ConsentPurposes" }
         events:
           type: array
           minItems: 1
           maxItems: 100
           items: { $ref: "#/components/schemas/Event" }
+    ConsentPurposes:
+      type: object
+      additionalProperties: false
+      required: [analytics, attribution, advertising, personalization]
+      properties:
+        analytics: { type: boolean }
+        attribution: { type: boolean }
+        advertising: { type: boolean, description: Requiere attribution=true. }
+        personalization: { type: boolean }
   responses:
     BadRequest:
       description: JSON o contrato inválido; la respuesta incluye requestId pero no detalles sensibles.
