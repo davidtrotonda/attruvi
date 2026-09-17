@@ -6,7 +6,7 @@ Web: [attruvi.com](https://attruvi.com)
 
 El objetivo es conectar campañas publicitarias con instalaciones, compras, ingresos y retención, y devolver conversiones válidas a Google Ads, Meta Ads y TikTok Ads.
 
-> Estado: MVP técnico completo y auditable, todavía **no listo para integrar en apps reales**. Faltan credenciales/aprobaciones de redes, verificadores activos de App Attest/Play Integrity, builds nativos en dispositivos y revisión jurídica.
+> Estado: web, Supabase y Workers desplegados y verificables en producción. El producto todavía **no está listo para integrar en apps reales**: faltan credenciales/aprobaciones de redes, verificadores activos de App Attest/Play Integrity, validación iOS en dispositivo, SMTP/Google OAuth y revisión jurídica.
 
 ## Alcance inicial
 
@@ -51,6 +51,8 @@ Empieza por [`docs/START_HERE.md`](docs/START_HERE.md). La arquitectura y el est
 La instalación propia está en `docs/SELF_HOSTING.md`. La auditoría redactada y el modelo de amenazas están en `docs/SECURITY_AUDIT.md` y `docs/THREAT_MODEL.md`.
 
 El orden de despliegue, rollback, observabilidad y respuesta a incidentes está en `docs/PRODUCTION_RUNBOOK.md`.
+
+La salud pública básica está en [`/api/health`](https://www.attruvi.com/api/health). [`/api/health?deep=1`](https://www.attruvi.com/api/health?deep=1) comprueba desde Vercel que los Workers de enlaces e ingestión responden, sin exponer secretos ni payloads.
 
 La configuración de Supabase Auth, Google OAuth y sus URLs de retorno está en `docs/AUTH_SETUP.md`.
 

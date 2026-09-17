@@ -2,6 +2,19 @@
 
 Actualizado: 2026-09-17.
 
+## Estado operativo de la release
+
+- Web y dashboard en producción: `https://www.attruvi.com`; `https://attruvi.com` redirige permanentemente a `www`.
+- Release web activa: commit `9007492`, deployment Vercel `EUGgHP28tpzKZzcH4reKRJqMS5RS`.
+- Enlaces e ingestión: Workers de producción `attruvi-links` y `attruvi-ingest`; sus URLs se inyectan mediante variables de entorno y no se fijan en el repositorio público.
+- Staging conservado mediante el alias del proyecto Vercel y los Workers `attruvi-links-staging` / `attruvi-ingest-staging`; los hosts se obtienen del gestor de despliegues, no del código.
+- `/api/health?deep=1` comprueba desde Vercel los dos Workers. Tras rotar y revocar las claves anteriores devolvió HTTP 200 y estado `ok` para web, links e ingest.
+- Supabase producción tiene todas las migraciones aplicadas, RLS activo en todas las tablas públicas y redirect URLs de `www.attruvi.com` configuradas. La rama de staging ejecutó nueve suites pgTAP y el E2E sintético exacto.
+- Vercel ejecuta costes a diario, métricas a diario, privacidad a diario y postbacks cada cinco minutos. Cloudflare tiene KV, Queue, DLQ, logs y trazas activos.
+- Escritorio y viewport móvil de 390 px pasan sin overflow ni errores de consola. La landing responde 200, el dominio raíz 308 y `/dashboard` sin sesión 307 hacia el acceso.
+
+La infraestructura principal está desplegada y es verificable, pero el producto **no se marca aún como listo para integrar en apps reales**: faltan verificadores activos de App Attest/Play Integrity, credenciales y aprobación de las redes, SMTP/Google OAuth de producción, validación nativa iOS y revisión jurídica. El dominio de smart links sigue en `workers.dev` hasta que `attruvi.com` pueda asociarse a una zona de Cloudflare sin cambiar DNS ajeno.
+
 ## Completado
 
 - La landing Next.js permanece en la raíz y conserva sus scripts originales.
@@ -75,7 +88,7 @@ Actualizado: 2026-09-17.
 - `npm run test:web`: registro, verificación, contraseña incorrecta, recuperación, Google OAuth simulado, callback seguro, clasificación de rutas privadas y generación segura de la guía de instalación.
 - `npm run test:db`: aislamiento RLS e invariantes en Postgres local; necesita `supabase start` y Docker.
 
-En esta ejecución pasó `npm run verify`: lint sin avisos, typecheck de raíz y cinco workspaces, 37 pruebas web, 58 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El Worker de ingestión aporta 11 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada, nunca encola IP/agente en claro y rechaza una desinstalación enviada por el SDK. El build incluye el dashboard completo, páginas legales, exportaciones privadas, `/api/cron/privacy` y los demás jobs; el Worker de enlaces mantiene sus 13 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas. Las 21 assertions pgTAP de seguridad/privacidad pasan contra el Supabase remoto; las suites históricas que dependen del seed Demo requieren cargar primero `supabase/seed.sql` en ese entorno.
+En esta ejecución pasaron lint, typecheck de raíz y cinco workspaces, 40 pruebas web, 65 pruebas de workspaces, contrato estructural SQL y builds de los paquetes y ambos Workers: 105 pruebas JavaScript/TypeScript en total. El build remoto de Next.js 16 pasó en Vercel y fue promovido a producción. El Worker de ingestión aporta 13 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada, nunca encola IP/agente en claro y rechaza una desinstalación enviada por el SDK. El Worker de enlaces mantiene 15 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas. Las 21 assertions pgTAP de seguridad/privacidad pasan contra el Supabase remoto; las suites históricas que dependen del seed Demo requieren cargar primero `supabase/seed.sql` en ese entorno.
 
 Las suites pgTAP tienen 194 assertions. Aunque `npm run test:db` local no estuvo disponible porque este equipo no tiene Docker, las verificaciones remotas registradas cubren 24 assertions de esquema, 21 del motor de atribución, 23 de actividad, 24 de costes, 33 del motor de métricas, 12 de acceso al dashboard, 24 del pipeline de postbacks, 12 del asistente y 21 de seguridad/privacidad, siempre dentro de transacciones revertidas. Además cubren dinero exacto, división por cero, aislamiento RLS, retención y LTV maduros, reembolsos, datos tardíos, reconciliación, preservación raw, invitaciones, roles, OAuth de un uso, exportación/borrado, outbox, deduplicación, replay auditado, pruebas de development y bloqueo de escrituras directas. Las suites que usan fixtures Demo deben ejecutarse después de cargar el seed reproducible.
 
@@ -89,7 +102,7 @@ La fase del SDK superó TypeScript estricto, `npm pack`, 12 pruebas (incluido el
 
 El E2E sintético enlaza un clic TikTok con Install Referrer, primera apertura, `sign_up`, compra de 49,90 EUR, coste de 10,00 EUR, CPI/CAC de 10,00 EUR, ROAS 4,99 y tres decisiones de postback: TikTok elegible en validación local, Google omitido sin click ID propio y Meta omitido sin `fbclid`. También cubre offline/reintento, duplicados, dos organizaciones, ausencia de consentimiento y fallos temporales. La matriz y hashes reproducibles están en `docs/APP_COMPATIBILITY.md`.
 
-## Pendiente de fases posteriores
+## Pendiente de integraciones externas
 
 - Credenciales de desarrollador y aprobación externa de Google Ads, Meta Ads y TikTok Ads; los conectores quedan implementados y muestran “Pendiente de credenciales” hasta recibirlas.
 - Credenciales reales, IDs de conversión/dataset/event source y aprobación de los tres proveedores para activar postbacks en producción; el código queda funcional y en “Pendiente de credenciales” hasta entonces.
@@ -100,10 +113,8 @@ Nada de lo anterior se presenta como funcional hasta que se implemente y verifiq
 
 ## Configuración externa pendiente
 
-- Añadir en Supabase las URLs de `docs/AUTH_SETUP.md`, activar Google con su Client ID/Secret y configurar un SMTP de producción.
-- Añadir las variables públicas de Supabase a los entornos de Vercel. No se requieren secretos de Google en el navegador.
-- Crear KV/Queues, configurar los tres secretos del Worker y asociar el dominio de enlaces siguiendo `docs/SMART_LINKS_CLOUDFLARE.md`.
-- Para publicar ingestión en Cloudflare: elegir la cuenta destino, crear su KV y sus dos Queues, y cargar `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `CLICK_HASH_SALT` como secretos. El salt debe coincidir con el del Worker de enlaces. Ningún valor está disponible en el repositorio ni se ha inventado o expuesto.
+- Activar Google Auth con su Client ID/Secret y configurar un SMTP de producción. Las redirect URLs de Attruvi ya están registradas en Supabase.
+- Asociar un dominio estable de Attruvi a los Workers cuando pueda hacerse sin mover ni alterar DNS ajeno; mientras tanto se usan las URLs `workers.dev` verificadas.
 - Añadir las asociaciones reales de cada app a `association-config.ts` y comprobar Universal Links/App Links en dispositivos.
-- Compilar la app de ejemplo en Android y iOS en un host con JDK/Android SDK y Xcode, respectivamente.
-- Añadir `CONNECTOR_ENCRYPTION_KEYS`, `CONNECTOR_ENCRYPTION_ACTIVE_KEY_VERSION`, `CRON_SECRET` y las credenciales publicitarias de `docs/AD_COST_CONNECTORS.md` a Vercel; registrar las tres callbacks. Mantener temporalmente `CONNECTOR_ENCRYPTION_KEY` solo para descifrar datos legados. No hay valores reales en el repositorio.
+- Compilar y validar iOS en un host con Xcode; Android RN 0.87/New Architecture y los tres fixtures objetivo ya pasan.
+- Añadir únicamente las credenciales publicitarias de `docs/AD_COST_CONNECTORS.md` y registrar las callbacks. El llavero de cifrado y `CRON_SECRET` ya están configurados en Vercel; no hay valores reales en el repositorio.

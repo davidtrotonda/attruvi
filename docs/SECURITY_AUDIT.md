@@ -17,7 +17,9 @@ No se detectaron claves privadas, tokens, JWT, secret keys de Supabase ni secret
 | Contacto de proyecto | `packages/react-native/AttruviReactNative.podspec` | Solo se permite una dirección funcional del proyecto, no un correo personal. |
 | Ejemplos de entorno | `.env.example`, `workers/*/.dev.vars.example` | `.env.example` no contiene valores; los Workers usan placeholders reconocibles y deben recibir secretos con Wrangler. |
 
-No hay un secreto confirmado que rotar como consecuencia de esta auditoría. Si el escáner detecta uno en el futuro, la respuesta obligatoria es revocarlo en el proveedor, reemplazarlo en los gestores de secretos, invalidar sesiones derivadas y limpiar el historial coordinadamente; borrar solo la línea actual no basta.
+Durante la operación de producción, dos claves secretas nuevas de Supabase aparecieron de forma transitoria en la salida local de la automatización del navegador. Nunca se añadieron a Git, fixtures, logs de aplicación ni mensajes públicos. Se creó una tercera clave, se instaló de forma write-only en Vercel y ambos Workers, se verificó `/api/health?deep=1` y se eliminaron irreversiblemente las dos claves expuestas. El escaneo del repositorio permanece limpio de secretos actuales; la coincidencia histórica de severidad media es un identificador de cuenta de Cloudflare ya retirado del archivo actual.
+
+Si el escáner detecta otro secreto en el futuro, la respuesta obligatoria es revocarlo en el proveedor, reemplazarlo en los gestores de secretos, invalidar sesiones derivadas y limpiar el historial coordinadamente; borrar solo la línea actual no basta.
 
 ## Dependencias
 

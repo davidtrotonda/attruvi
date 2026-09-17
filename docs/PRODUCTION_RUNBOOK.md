@@ -27,7 +27,7 @@ Hasta disponer de una zona de `attruvi.com` gestionada por Cloudflare, los Worke
 3. Ejecutar pruebas de RLS y consultas de esquema que reviertan su transacción.
 4. Desplegar Workers, comprobar `/health` y publicar primero tráfico de prueba.
 5. Configurar Vercel desde su almacén de variables y desplegar con `vercel deploy --prod`.
-6. Comprobar `/api/health`, landing, Auth, dashboard, cron y E2E en modo development/dry-run.
+6. Comprobar `/api/health`, `/api/health?deep=1`, landing, Auth, dashboard, cron y E2E en modo development/dry-run.
 7. Revisar logs redactados, latencia, lag de Queue, frescura de sync y resultados de postback.
 
 ## Rollback
@@ -101,6 +101,7 @@ La concesión técnica añadida en esta release puede revocarse, si fuese impres
 ## Señales y alertas
 
 - Web: estado de deployment, `/api/health`, errores 5xx y latencia.
+- Dependencias: `/api/health?deep=1` debe devolver `ok` para links e ingest; `degraded` no debe promoverse sin explicar la incidencia.
 - Links: `/health`, redirects, errores, latencia y lag/DLQ de clics.
 - Ingest: `/health`, `accepted`, `rejected`, `queued`, `persisted`, lag y DLQ.
 - Supabase: conexiones, errores de Auth, advisor de seguridad, tamaño y consultas lentas.

@@ -2,6 +2,14 @@
 
 Attruvi te dice de qué anuncio llega una instalación, qué hace después ese usuario y cuánto valor genera. También puede devolver conversiones válidas a Google, Meta y TikTok cuando configures sus credenciales.
 
+## Dónde está desplegado
+
+- Web y dashboard: `https://www.attruvi.com`.
+- Estado básico: `https://www.attruvi.com/api/health`.
+- Estado de web + Workers: `https://www.attruvi.com/api/health?deep=1`.
+
+La plataforma principal está en producción y los conectores sin credenciales quedan desactivados. Antes de instalarla en usuarios reales siguen siendo obligatorios App Attest/Play Integrity, la validación iOS en dispositivo, SMTP/Google OAuth y la revisión legal indicada en `BUILD_STATUS.md`.
+
 ## Si solo quieres probarlo
 
 1. Entra en `https://www.attruvi.com`.
@@ -45,6 +53,8 @@ Carga secretos únicamente en Vercel, Supabase y Cloudflare. `supabase/seed.sql`
 - postbacks en dry-run o `skipped` con razón.
 
 Google Ads, Meta Ads y TikTok Ads aparecen como **Pendiente de credenciales** hasta recibir sus Client IDs/Secrets y, cuando corresponda, developer token, IDs de conversión/dataset/event source y aprobación del proveedor.
+
+Para acceso Google también falta el Client ID/Secret de Google en Supabase. El acceso manual está implementado, pero el correo transaccional de producción necesita SMTP propio para entregar verificación y recuperación con fiabilidad.
 
 ## Límites que debes conocer
 
