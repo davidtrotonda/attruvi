@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(23);
 
 select has_table('public', 'app_privacy_settings', 'privacidad por app está versionada');
 select has_function('public', 'issue_connector_oauth_state', array['uuid','text','text'], 'OAuth registra estado de un solo uso');
@@ -84,6 +84,8 @@ reset role;
 select isnt(has_function_privilege('authenticated', 'public.run_app_privacy_retention(uuid,boolean)', 'EXECUTE'), true, 'authenticated no ejecuta retención de servicio');
 select isnt(has_function_privilege('anon', 'public.revoke_connector_secret(uuid)', 'EXECUTE'), true, 'anon no revoca secretos');
 select isnt(has_table_privilege('authenticated', 'private.connector_oauth_states', 'SELECT'), true, 'clientes no leen estados OAuth');
+select ok(has_schema_privilege('service_role', 'private', 'USAGE'), 'service_role puede ejecutar la allowlist privada de ingestión');
+select isnt(has_schema_privilege('anon', 'private', 'USAGE'), true, 'anon no puede cruzar el límite del esquema privado');
 
 select * from finish();
 rollback;

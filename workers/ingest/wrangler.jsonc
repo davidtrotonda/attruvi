@@ -50,5 +50,57 @@
     "enabled": true,
     "logs": { "head_sampling_rate": 1 },
     "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+  "env": {
+    "staging": {
+      "name": "attruvi-ingest-staging",
+      "vars": {
+        "APP_CONFIG_CACHE_TTL_SECONDS": "60",
+        "MAX_REQUEST_BYTES": "262144"
+      },
+      "kv_namespaces": [
+        { "binding": "APP_CONFIG_CACHE" }
+      ],
+      "queues": {
+        "producers": [
+          { "binding": "EVENT_QUEUE", "queue": "attruvi-ingest-events-staging" },
+          { "binding": "DEAD_LETTER_QUEUE", "queue": "attruvi-ingest-dead-letter-staging" }
+        ],
+        "consumers": [
+          {
+            "queue": "attruvi-ingest-events-staging",
+            "max_batch_size": 50,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "retry_delay": 15
+          }
+        ]
+      },
+      "ratelimits": [
+        {
+          "name": "APP_RATE_LIMIT",
+          "namespace_id": "1101",
+          "simple": { "limit": 1200, "period": 60 }
+        },
+        {
+          "name": "IP_RATE_LIMIT",
+          "namespace_id": "1102",
+          "simple": { "limit": 300, "period": 60 }
+        },
+        {
+          "name": "ABUSE_RATE_LIMIT",
+          "namespace_id": "1103",
+          "simple": { "limit": 30, "period": 60 }
+        }
+      ],
+      "analytics_engine_datasets": [
+        { "binding": "INGEST_METRICS", "dataset": "attruvi_ingest_metrics_staging" }
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": { "head_sampling_rate": 1 },
+        "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+      }
+    }
   }
 }

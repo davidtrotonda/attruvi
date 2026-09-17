@@ -8,6 +8,7 @@ import {
   type QueuedIngestMessage,
 } from "./contracts";
 import type { AttributionView } from "./router";
+import { supabaseServerAuthHeaders } from "./supabase-auth";
 
 const attributionViewSchema = z
   .object({
@@ -41,9 +42,9 @@ export async function sha256Hex(value: string): Promise<string> {
 
 function serviceHeaders(env: Env): HeadersInit {
   return {
-    apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-    authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+    ...supabaseServerAuthHeaders(env.SUPABASE_SERVICE_ROLE_KEY),
     "content-type": "application/json",
+    "user-agent": "Attruvi-Ingest-Worker/0.1.0",
   };
 }
 
@@ -53,7 +54,8 @@ function transientStatus(status: number): boolean {
 
 function configuredCacheTtl(env: Env): number {
   const parsed = Number(env.APP_CONFIG_CACHE_TTL_SECONDS);
-  return Number.isInteger(parsed) && parsed >= 5 && parsed <= 300 ? parsed : 60;
+  // Cloudflare KV rejects expirationTtl values below 60 seconds.
+  return Number.isInteger(parsed) && parsed >= 60 && parsed <= 300 ? parsed : 60;
 }
 
 async function callRpc(env: Env, functionName: string, body: unknown): Promise<unknown> {
@@ -82,7 +84,7 @@ export async function resolveAppKeyFromSupabase(
 
   const value = await callRpc(env, "resolve_ingest_app_key", { provided_key_hash: keyHash });
   if (value === null) {
-    await env.APP_CONFIG_CACHE.put(cacheKey, "missing", { expirationTtl: 15 });
+    await env.APP_CONFIG_CACHE.put(cacheKey, "missing", { expirationTtl: 60 });
     return null;
   }
   const parsed = appKeyConfigurationSchema.safeParse(value);

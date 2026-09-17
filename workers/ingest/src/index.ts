@@ -2,8 +2,20 @@ import { consumeIngestBatch } from "./consumer";
 import { type DeadLetter, type QueuedIngestMessage } from "./contracts";
 import { createIngestHandler } from "./router";
 import { createCloudflareRuntime, writeMetric } from "./runtime";
-import { persistIngestMessages } from "./supabase";
+import { persistIngestMessages, SupabasePersistenceError } from "./supabase";
 import { assertIngestEnvironment, secureIngestResponse } from "./environment";
+
+function safeErrorCode(error: unknown): string {
+  if (error instanceof SupabasePersistenceError) return `supabase_${error.status}`;
+  if (error instanceof Error) {
+    const sanitized = error.message
+      .slice(0, 120)
+      .replace(/[^A-Za-z0-9_.:-]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    return sanitized || error.name;
+  }
+  return "unknown_error";
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -17,7 +29,7 @@ export default {
           message: "ingest request failed",
           path: new URL(request.url).pathname,
           requestId,
-          error: error instanceof Error ? error.name : "unknown_error",
+          error: safeErrorCode(error),
         }),
       );
       writeMetric(env, "rejected", 1, { code: "service_unavailable" });

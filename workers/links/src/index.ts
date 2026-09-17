@@ -7,11 +7,20 @@ import {
 } from "./contracts";
 import { createSmartLinkHandler, type LinkRuntime } from "./router";
 import { assertLinksEnvironment, secureResponse } from "./environment";
+import { supabaseServerAuthHeaders } from "./supabase-auth";
 
 const linkCachePrefix = "smart-link:v1:";
 const missingCachePrefix = "smart-link-missing:v1:";
 const dedupeCachePrefix = "click-dedupe:v1:";
 const adminReplayPrefix = "admin-replay:v1:";
+
+function serviceHeaders(env: Env): HeadersInit {
+  return {
+    ...supabaseServerAuthHeaders(env.SUPABASE_SERVICE_ROLE_KEY),
+    "Content-Type": "application/json",
+    "User-Agent": "Attruvi-Links-Worker/0.1.0",
+  };
+}
 
 function positiveInteger(value: string, fallback: number, maximum: number) {
   const parsed = Number(value);
@@ -25,11 +34,7 @@ function cacheTtl(env: Env) {
 async function fetchSmartLink(env: Env, slug: string): Promise<SmartLinkConfig | null> {
   const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/resolve_smart_link`, {
     method: "POST",
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      "Content-Type": "application/json",
-    },
+    headers: serviceHeaders(env),
     body: JSON.stringify({ requested_slug: slug }),
   });
   if (!response.ok) throw new Error(`smart_link_resolver_${response.status}`);
@@ -293,9 +298,7 @@ async function persistClickBatch(batch: MessageBatch<ClickMessage>, env: Env) {
     {
       method: "POST",
       headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-        "Content-Type": "application/json",
+        ...serviceHeaders(env),
         Prefer: "resolution=ignore-duplicates,return=minimal",
       },
       body: JSON.stringify(validMessages.map(({ body }) => databaseClick(body))),

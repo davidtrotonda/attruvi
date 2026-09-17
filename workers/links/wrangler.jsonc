@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "attruvi-links",
   "main": "src/index.ts",
-  "compatibility_date": "2026-09-16",
+  "compatibility_date": "2026-09-17",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "SMART_LINK_CACHE_TTL_SECONDS": "300"
@@ -33,5 +33,40 @@
     "enabled": true,
     "logs": { "head_sampling_rate": 1 },
     "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+  "env": {
+    "staging": {
+      "name": "attruvi-links-staging",
+      "vars": {
+        "SMART_LINK_CACHE_TTL_SECONDS": "60"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "LINKS_KV"
+        }
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "CLICK_QUEUE",
+            "queue": "attruvi-link-clicks-staging"
+          }
+        ],
+        "consumers": [
+          {
+            "queue": "attruvi-link-clicks-staging",
+            "max_batch_size": 100,
+            "max_batch_timeout": 5,
+            "max_retries": 5,
+            "dead_letter_queue": "attruvi-link-clicks-dead-letter-staging"
+          }
+        ]
+      },
+      "observability": {
+        "enabled": true,
+        "logs": { "head_sampling_rate": 1 },
+        "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+      }
+    }
   }
 }

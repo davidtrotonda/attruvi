@@ -82,6 +82,13 @@ export async function consumeIngestBatch(
     runtime.metric("lag", lag, { appId: metricScope });
   } catch (error) {
     const permanent = error instanceof SupabasePersistenceError && !error.transient;
+    console.error(JSON.stringify({
+      message: "ingest queue persistence failed",
+      status: error instanceof SupabasePersistenceError ? error.status : null,
+      transient: error instanceof SupabasePersistenceError ? error.transient : null,
+      batchSize: valid.length,
+      attempts: Math.max(...valid.map(({ queue }) => queue.attempts)),
+    }));
     for (const item of valid) {
       if (permanent || item.queue.attempts >= 5) {
         try {
