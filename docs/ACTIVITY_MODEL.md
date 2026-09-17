@@ -27,6 +27,8 @@ Se mantienen dos importes distintos:
 
 `revenue_validations` y `ReceiptValidator` son la interfaz preparada para esos proveedores. Mientras no haya credenciales y una respuesta oficial, el estado permanece `reported` o `pending`; nunca se presenta como verificado. No se suman monedas diferentes: las métricas conservan un objeto por moneda. `ltv_observed_minor` solo suma la moneda configurada de la app.
 
+El camino principal no depende de una tienda ni de RevenueCat. Cualquier app de un cliente registra una compra, suscripción o reembolso con `@attruvi/react-native`; Attruvi deduplica el evento, lo relaciona con su atribución y usa `revenue_reported_minor` en métricas y postbacks. La validación de recibos es una capa opcional para distinguir después qué importe fue confirmado por un proveedor externo.
+
 ## Suscripciones
 
 `subscription_events` conserva inicio, renovación, cancelación, expiración y reembolso. El estado de `subscriptions` se reconstruye por tiempo de ocurrencia, no por orden de recepción. La fila actual expone `lifecycle_status`, fechas relevantes, revenue declarado/verificado y estado de validación; el historial nunca se sobrescribe.

@@ -22,6 +22,8 @@ La plataforma principal está en producción y los conectores sin credenciales q
 
 La appKey es pública, revocable y limitada a una app/entorno. No es una clave de Supabase ni concede lectura.
 
+Las apps mencionadas en las pruebas de compatibilidad no están incluidas en Attruvi. Sirvieron únicamente para comprobar que el mismo SDK se instala en proyectos React Native reales. Cada cuenta crea sus propias apps y Attruvi atribuye los eventos que esas apps envían.
+
 ## Si vas a desplegar tu propia instancia
 
 Lee en este orden:
@@ -60,6 +62,6 @@ Para acceso Google también falta el Client ID/Secret de Google en Supabase. El 
 
 - iOS no permite prometer atribución determinista si no entrega una señal oficial.
 - App Attest y Play Integrity están preparados pero todavía no verifican dispositivos.
-- Los ingresos son declarados, no verificados, hasta integrar App Store, Google Play o RevenueCat.
+- Las compras, suscripciones y reembolsos enviados por el SDK se atribuyen y entran en las métricas como ingresos reportados desde el primer momento. Conectar App Store, Google Play o RevenueCat solo añade una verificación externa opcional y no es necesario para usar la atribución.
 - Universal Links/App Links requieren un dominio asociado estable y builds reales de iOS/Android.
 - Los textos legales son borradores técnicos y requieren revisión jurídica antes de uso comercial.

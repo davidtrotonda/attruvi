@@ -13,7 +13,7 @@ export default function TermsPage() {
       <h2>Uso permitido</h2>
       <p>Debes contar con base legal, avisos y consentimientos aplicables; respetar ATT, Privacy Sandbox y políticas de cada red; y enviar únicamente datos necesarios. Quedan prohibidos el fingerprinting oculto, la suplantación de conversiones, el acceso a otras organizaciones y el uso de PII en campos no diseñados para ello.</p>
       <h2>Exactitud</h2>
-      <p>La disponibilidad de señales depende del sistema operativo, tienda y red. iOS sin señal oficial no se presenta como determinista. Las desinstalaciones son inferencias cuando existe evidencia válida. Los ingresos declarados por el SDK no son verificados hasta conectar una fuente oficial.</p>
+      <p>La disponibilidad de señales depende del sistema operativo, tienda y red. iOS sin señal oficial no se presenta como determinista. Las desinstalaciones son inferencias cuando existe evidencia válida. Los ingresos enviados por el SDK se atribuyen como reportados; una fuente externa opcional puede confirmarlos además como verificados.</p>
       <h2>Responsabilidad del operador</h2>
       <p>Quien despliega Attruvi es responsable de asegurar su infraestructura, configurar retención, gestionar solicitudes de derechos, mantener secretos fuera del cliente y validar textos legales con asesoramiento profesional.</p>
       <h2>Software sin garantía</h2>

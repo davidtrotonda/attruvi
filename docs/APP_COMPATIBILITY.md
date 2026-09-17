@@ -4,6 +4,8 @@
 **probado con fixture equivalente** y **compilado dentro de la app real**. Un manifiesto
 compatible no equivale a una compilación satisfactoria.
 
+Esta lista no es un catálogo de apps de Attruvi ni una precarga para cuentas nuevas. Son repositorios que el propietario autorizó usar como fixtures de compatibilidad. El producto sigue siendo multi-tenant: cada usuario registra una app externa propia e instala en ella el mismo SDK público.
+
 No se modificó ningún checkout ni rama de producción. Los identificadores de paquete,
 cuentas, proyectos y firma se comprobaron donde era necesario, pero se omiten de este
 documento público. No son secretos criptográficos, aunque tampoco son necesarios para

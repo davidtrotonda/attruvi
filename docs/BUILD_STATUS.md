@@ -5,7 +5,7 @@ Actualizado: 2026-09-17.
 ## Estado operativo de la release
 
 - Web y dashboard en producción: `https://www.attruvi.com`; `https://attruvi.com` redirige permanentemente a `www`.
-- Release web activa: commit `9007492`, deployment Vercel `EUGgHP28tpzKZzcH4reKRJqMS5RS`.
+- Release web activa desde la rama `main`; el deployment exacto se consulta en Vercel para evitar dejar aquí un identificador obsoleto tras cada despliegue.
 - Enlaces e ingestión: Workers de producción `attruvi-links` y `attruvi-ingest`; sus URLs se inyectan mediante variables de entorno y no se fijan en el repositorio público.
 - Staging conservado mediante el alias del proyecto Vercel y los Workers `attruvi-links-staging` / `attruvi-ingest-staging`; los hosts se obtienen del gestor de despliegues, no del código.
 - `/api/health?deep=1` comprueba desde Vercel los dos Workers. Tras rotar y revocar las claves anteriores devolvió HTTP 200 y estado `ok` para web, links e ingest.
@@ -46,6 +46,7 @@ La infraestructura principal está desplegada y es verificable, pero el producto
 - Perfiles seudónimos limitados a una app con unión explícita tras `identify`, reinstalaciones del mismo usuario, conflicto cerrado entre identidades distintas y borrado de identificadores sin romper el historial contable.
 - Sesiones reconstruibles con 30 minutos de inactividad por defecto y selector configurable por app; los eventos atrasados no dependen del orden de Queue.
 - Libro mayor idempotente con revenue declarado/verificado separado, monedas independientes, reembolsos negativos e interfaz futura para App Store, Google Play y RevenueCat.
+- Las apps reales citadas en la matriz son únicamente fixtures aislados de compatibilidad. Attruvi no las incorpora: cualquier cliente crea sus propias apps y envía compras, suscripciones y reembolsos mediante eventos del SDK.
 - Métricas por instalación y usuario: sesiones, actividad, registro, primera compra, payer status, días desde instalación e LTV observado.
 - `uninstall_inferred` restringido a invalidaciones push persistentes del backend, con fecha, evidencia minimizada y confianza; el SDK no puede declararlo.
 - Explorador `/dashboard/users` paginado y filtrado en servidor, con línea temporal clic → instalación → sesiones → ingresos → postbacks y sin PII.
@@ -107,7 +108,7 @@ El E2E sintético enlaza un clic TikTok con Install Referrer, primera apertura, 
 - Credenciales de desarrollador y aprobación externa de Google Ads, Meta Ads y TikTok Ads; los conectores quedan implementados y muestran “Pendiente de credenciales” hasta recibirlas.
 - Credenciales reales, IDs de conversión/dataset/event source y aprobación de los tres proveedores para activar postbacks en producción; el código queda funcional y en “Pendiente de credenciales” hasta entonces.
 - Verificadores oficiales de App Attest y Play Integrity; el contrato está preparado pero no se marca ningún token como verificado todavía.
-- Credenciales y conectores de validación de recibos para App Store, Google Play o RevenueCat; hasta entonces los ingresos se muestran como declarados, no verificados.
+- Validación opcional de recibos con App Store, Google Play o RevenueCat. No bloquea la atribución ni las métricas: los eventos del SDK ya producen ingresos reportados; esta integración futura solo permitiría marcarlos además como verificados.
 
 Nada de lo anterior se presenta como funcional hasta que se implemente y verifique en su fase correspondiente.
 

@@ -6,12 +6,15 @@ Web: [attruvi.com](https://attruvi.com)
 
 El objetivo es conectar campañas publicitarias con instalaciones, compras, ingresos y retención, y devolver conversiones válidas a Google Ads, Meta Ads y TikTok Ads.
 
+Las aplicaciones usadas durante la validación del SDK son únicamente pruebas de compatibilidad aisladas. No forman parte de Attruvi ni aparecen en cuentas nuevas: cada cliente registra sus propias aplicaciones y envía sus eventos mediante el SDK.
+
 > Estado: web, Supabase y Workers desplegados y verificables en producción. El producto todavía **no está listo para integrar en apps reales**: faltan credenciales/aprobaciones de redes, verificadores activos de App Attest/Play Integrity, validación iOS en dispositivo, SMTP/Google OAuth y revisión jurídica.
 
 ## Alcance inicial
 
 - SDK para React Native en iOS y Android.
 - Atribución de instalaciones y actividad posterior: sesiones, registro, compras, suscripciones, reembolsos y LTV observado.
+- Ingresos atribuidos desde eventos `purchase`, suscripción y reembolso enviados por cualquier app cliente; la verificación externa de recibos es opcional y se conserva separada.
 - Explorador de perfiles seudónimos por app con el recorrido clic → instalación → sesiones → ingresos → postbacks.
 - Medición de ingresos, ROAS, LTV y retención.
 - Dashboard de decisiones con comparación de periodos, jerarquía campaña → grupo → anuncio, estados de calidad de datos, filtros compartibles y gestión de equipos owner/admin/viewer.

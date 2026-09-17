@@ -194,3 +194,7 @@ Estado: aceptada. El rango React Native 0.86.3–0.87.x se conserva porque el mi
 ## ADR-047 — El claim de clic se libera si Queue no acepta el mensaje
 
 Estado: aceptada. El Worker reclama una clave de deduplicación antes de enviar a Queue para limitar clics repetidos. Si Queue falla, elimina ese claim antes de propagar el error; de otro modo un reintento válido parecería duplicado y perdería el único clic. La persistencia final conserva su unicidad en Postgres, de modo que liberar tras un fallo no debilita la idempotencia durable.
+
+## ADR-048 — Apps de validación aisladas e ingresos dirigidos por eventos
+
+Estado: aceptada. Tourixy, Solsuna, Rutimon y cualquier otro repositorio inspeccionado se usan exclusivamente como fixtures de compatibilidad del SDK y nunca como datos o proyectos incluidos en Attruvi. Cada organización registra sus propias apps. El camino principal de ingresos es `app cliente → SDK → evento purchase/suscripción/reembolso → atribución → métricas/postback`; App Store, Google Play o RevenueCat son verificadores opcionales y no requisitos para atribuir el importe reportado.

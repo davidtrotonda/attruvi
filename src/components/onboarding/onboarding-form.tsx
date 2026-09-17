@@ -71,7 +71,7 @@ export function OnboardingForm({ draft }: { draft: Draft }) {
               defaultValue={draft.app_name ?? ""}
               maxLength={120}
               name="app_name"
-              placeholder="Por ejemplo, Tourixy"
+              placeholder="Por ejemplo, Mi aplicación"
               required
             />
             {state.errors?.appName ? <small>{state.errors.appName[0]}</small> : null}

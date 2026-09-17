@@ -41,7 +41,7 @@ export function AppForm({ app }: { app?: AppDraft }) {
       <div className="management-form-grid">
         <label className="field-span-two">
           <span>Nombre de la app</span>
-          <input defaultValue={app?.name ?? ""} maxLength={120} name="name" placeholder="Por ejemplo, Tourixy" required />
+          <input defaultValue={app?.name ?? ""} maxLength={120} name="name" placeholder="Por ejemplo, Mi aplicación" required />
           <FieldError errors={state.errors?.name} />
         </label>
         <fieldset className="platform-picker field-span-two">
