@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createHealthPayload } from "./health";
+import { createHealthPayload, probeHealthDependency } from "./health";
 
 describe("health web", () => {
   it("solo expone metadatos operativos no sensibles", () => {
@@ -21,5 +21,37 @@ describe("health web", () => {
       status: "ok",
       timestamp: "2026-09-17T18:00:00.000Z",
     });
+  });
+
+  it("valida una dependencia sin exponer el cuerpo de respuesta", async () => {
+    const ticks = [10, 23];
+    const result = await probeHealthDependency(
+      "https://worker.example.com/base",
+      "attruvi-ingest",
+      async () => Response.json({ service: "attruvi-ingest", status: "ok", secret: "no-debe-aparecer" }),
+      () => ticks.shift() ?? 23,
+    );
+
+    expect(result).toEqual({ httpStatus: 200, latencyMs: 13, status: "ok" });
+    expect(JSON.stringify(result)).not.toContain("secret");
+  });
+
+  it("distingue configuración ausente y una dependencia inalcanzable", async () => {
+    await expect(probeHealthDependency(undefined, "attruvi-links")).resolves.toEqual({
+      httpStatus: null,
+      latencyMs: 0,
+      status: "misconfigured",
+    });
+
+    await expect(
+      probeHealthDependency(
+        "https://worker.example.com",
+        "attruvi-links",
+        async () => {
+          throw new Error("network");
+        },
+        () => 5,
+      ),
+    ).resolves.toEqual({ httpStatus: null, latencyMs: 0, status: "unreachable" });
   });
 });
