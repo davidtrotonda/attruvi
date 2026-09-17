@@ -41,8 +41,13 @@ Actualizado: 2026-09-17.
 - Jobs incrementales diarios con cursor, tres días de solapamiento, reclamación concurrente, paginación, backoff, deduplicación y correcciones tardías versionadas.
 - Gasto exacto en unidades menores y moneda original, jerarquía por `external_id`, campañas eliminadas históricas y bandeja **Sin relacionar** con asignación manual auditada.
 - Sección `/dashboard/costs` para conectar Google/Meta/TikTok, consultar estados, encolar sync y añadir costes manuales sin bloquear el producto cuando falten credenciales externas.
+- Motor reproducible por día, entorno, plataforma, moneda y niveles app/fuente/campaña/grupo/anuncio, con CPI, CAC, ROAS, conversiones, retención, sesiones, LTV observado y desinstalación siempre inferida.
+- Rollups incrementales con fechas sucias, reclamación concurrente, versiones, conservación raw, recálculo tardío y reconciliación por hash.
+- Consultas server-side filtrables y caché por app con invalidación inmediata; el navegador no descarga eventos raw.
+- Dashboard conectado a los agregados con filtros de periodo, entorno y plataforma.
+- `docs/METRICS.md`, fixture exacto de 33 assertions y benchmark de un millón de hechos sintéticos.
 - OpenAPI, ejemplos ficticios, entorno local con Miniflare, adaptador en memoria exclusivo de pruebas y prueba de carga medida.
-- Todas las migraciones aplicadas al proyecto Supabase Attruvi. Las 52 claves externas cuentan con índice de cobertura y la función técnica de auto-RLS no es ejecutable por `anon` ni `authenticated`.
+- Todas las migraciones aplicadas al proyecto Supabase Attruvi. Las 55 claves externas cuentan con índice de cobertura y la función técnica de auto-RLS no es ejecutable por `anon` ni `authenticated`.
 
 ## Verificación disponible
 
@@ -51,9 +56,11 @@ Actualizado: 2026-09-17.
 - `npm run test:web`: registro, verificación, contraseña incorrecta, recuperación, Google OAuth simulado, callback seguro y clasificación de rutas privadas.
 - `npm run test:db`: aislamiento RLS e invariantes en Postgres local; necesita `supabase start` y Docker.
 
-En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 14 pruebas web, 49 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El Worker de ingestión aporta 11 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada, nunca encola IP/agente en claro y rechaza una desinstalación enviada por el SDK. El build incluye `/dashboard/apps`, `/dashboard/links`, `/dashboard/attribution`, `/dashboard/users` y `/dashboard/costs`; el Worker de enlaces mantiene sus 13 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas.
+En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 15 pruebas web, 51 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El Worker de ingestión aporta 11 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada, nunca encola IP/agente en claro y rechaza una desinstalación enviada por el SDK. El build incluye `/dashboard/apps`, `/dashboard/links`, `/dashboard/attribution`, `/dashboard/users`, `/dashboard/costs` y el cron `/api/cron/metrics`; el Worker de enlaces mantiene sus 13 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas.
 
-Las suites pgTAP tienen 92 assertions. Aunque `npm run test:db` local no estuvo disponible porque la instancia local de Supabase no pudo inspeccionarse, las 24 assertions de esquema, 21 del motor de atribución, 23 de actividad y 24 de costes pasaron contra el proyecto Supabase Attruvi dentro de transacciones revertidas. Además de la atribución, cubren RLS entre organizaciones, sesión configurable, eventos fuera de orden, unión/conflicto de identidad, compra duplicada, reembolso, renovación, varias monedas, reinstalación, borrado, snapshot histórico, inferencia push persistente, secretos cerrados, jobs diarios, correcciones tardías, campañas eliminadas, asignaciones persistentes, agregación completa y CSV/moneda exactos.
+Las suites pgTAP tienen 125 assertions. Aunque `npm run test:db` local no estuvo disponible porque este equipo no tiene Docker, las 24 assertions de esquema, 21 del motor de atribución, 23 de actividad, 24 de costes y 33 del motor de métricas pasaron contra el proyecto Supabase Attruvi dentro de transacciones revertidas. Además cubren dinero exacto, división por cero, aislamiento RLS, retención y LTV maduros, reembolsos, datos tardíos, reconciliación y preservación raw.
+
+El benchmark SQL del 17-09-2026 expandió 1.000.000 de hechos a 5.000.000 de filas y 80.370 grupos en 5,335 s en Supabase, con 7,1 MB de memoria de hash y 36 MB temporales. Mide el núcleo sintético de agrupación, no garantiza latencia end-to-end.
 
 La prueba de carga local más reciente aceptó 5.000/5.000 solicitudes con concurrencia 100 en 1.025 ms: 4.878,05 solicitudes/s, p50 13 ms y p95 27 ms. Mide validación, controles y cola en memoria; no se presenta como rendimiento de red de Cloudflare o Supabase.
 
@@ -64,7 +71,7 @@ La fase del SDK superó TypeScript estricto con los tipos de React Native 0.87, 
 ## Pendiente de fases posteriores
 
 - Credenciales de desarrollador y aprobación externa de Google Ads, Meta Ads y TikTok Ads; los conectores quedan implementados y muestran “Pendiente de credenciales” hasta recibirlas.
-- Agregación final de métricas combinadas y postbacks de las redes en producción.
+- Envío final de postbacks de conversión a las redes en producción.
 - Verificadores oficiales de App Attest y Play Integrity; el contrato está preparado pero no se marca ningún token como verificado todavía.
 - Credenciales y conectores de validación de recibos para App Store, Google Play o RevenueCat; hasta entonces los ingresos se muestran como declarados, no verificados.
 

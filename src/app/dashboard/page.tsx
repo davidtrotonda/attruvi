@@ -17,29 +17,72 @@ function formatMinorUnits(value: string, currency: string) {
   return `${sign}${units.toLocaleString("es-ES")},${cents} ${currencySymbols[currency] ?? currency}`;
 }
 
-function formatRatio(numerator: string, denominator: string) {
-  const top = BigInt(numerator);
-  const bottom = BigInt(denominator);
-  if (bottom === BigInt(0)) return "—";
-  const hundredths = (top * BigInt(100)) / bottom;
-  return `${hundredths / BigInt(100)},${(hundredths % BigInt(100)).toString().padStart(2, "0")}×`;
+function formatDecimalMoney(value: string | null, currency: string) {
+  if (value === null) return "—";
+  return new Intl.NumberFormat("es-ES", {
+    currency,
+    currencyDisplay: "narrowSymbol",
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    style: "currency",
+  }).format(Number(value) / 100);
 }
 
-function formatCostPerInstall(spend: string, installs: number, currency: string) {
-  return installs ? formatMinorUnits((BigInt(spend) / BigInt(installs)).toString(), currency) : "—";
+function formatDecimalRatio(value: string | null) {
+  if (value === null) return "—";
+  return `${Number(value).toLocaleString("es-ES", { maximumFractionDigits: 2 })}×`;
+}
+
+function formatPercent(value: string | null) {
+  if (value === null) return "—";
+  return `${(Number(value) * 100).toLocaleString("es-ES", { maximumFractionDigits: 1 })}%`;
+}
+
+function dateInput(value: string | string[] | undefined, fallback: string) {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  return candidate && /^\d{4}-\d{2}-\d{2}$/.test(candidate) ? candidate : fallback;
 }
 
 function SourceDot({ kind }: { kind: string }) {
   return <i className={`source-dot source-dot-${kind}`} aria-hidden="true" />;
 }
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const identity = await requireVerifiedIdentity();
-  const workspace = await getDashboardSnapshot(identity);
+  const params = await searchParams;
+  const today = new Date().toISOString().slice(0, 10);
+  const thirtyDaysAgo = new Date(new Date().getTime() - 29 * 86_400_000).toISOString().slice(0, 10);
+  const environmentValue = Array.isArray(params.environment) ? params.environment[0] : params.environment;
+  const platformValue = Array.isArray(params.platform) ? params.platform[0] : params.platform;
+  const environment = environmentValue === "development" || environmentValue === "staging"
+    ? environmentValue
+    : "production";
+  const platform = platformValue === "android" || platformValue === "ios" ? platformValue : undefined;
+  const from = dateInput(params.from, thirtyDaysAgo);
+  const to = dateInput(params.to, today);
+  const workspace = await getDashboardSnapshot(identity, {
+    environment,
+    from: from <= to ? from : to,
+    ...(platform ? { platform } : {}),
+    to: from <= to ? to : from,
+  });
   if (!workspace.app) redirect("/onboarding");
 
   const { app, organization, snapshot } = workspace;
-  const totals = snapshot?.totals ?? { buyers: 0, installs: 0, revenueMinor: "0", spendMinor: "0" };
+  const totals = snapshot?.totals ?? {
+    buyers: 0,
+    clicks: 0,
+    installs: 0,
+    registeredUsers: 0,
+    retentionD7: null,
+    revenueMinor: "0",
+    roas: null,
+    spendMinor: "0",
+  };
 
   return (
     <DashboardShell active="summary" appName={app.name} displayName={identity.displayName} organizationName={organization.name}>
@@ -49,14 +92,20 @@ export default async function DashboardPage() {
           <h1>Hola, {identity.displayName}.</h1>
           <p>Así convierten en valor los usuarios que llegan desde tus anuncios.</p>
         </div>
-        <div className="dashboard-date-filter"><span>Periodo</span><strong>Últimos 30 días</strong></div>
+        <form className="dashboard-date-filter" method="get">
+          <label><span>Desde</span><input name="from" type="date" defaultValue={from} /></label>
+          <label><span>Hasta</span><input name="to" type="date" defaultValue={to} /></label>
+          <label><span>Entorno</span><select name="environment" defaultValue={environment}><option value="production">Producción</option><option value="staging">Staging</option><option value="development">Desarrollo</option></select></label>
+          <label><span>Plataforma</span><select name="platform" defaultValue={platform ?? ""}><option value="">Todas</option><option value="android">Android</option><option value="ios">iOS</option></select></label>
+          <button type="submit">Aplicar</button>
+        </form>
       </div>
 
       <div className="dashboard-metrics">
         <article><span>Gasto publicitario</span><strong>{formatMinorUnits(totals.spendMinor, app.currency)}</strong><small>Importado y manual</small></article>
         <article><span>Instalaciones atribuidas</span><strong>{totals.installs.toLocaleString("es-ES")}</strong><small>Con origen identificado</small></article>
         <article><span>Ingresos atribuidos</span><strong>{formatMinorUnits(totals.revenueMinor, app.currency)}</strong><small>{totals.buyers} compradores</small></article>
-        <article className="dashboard-metric-accent"><span>ROAS</span><strong>{formatRatio(totals.revenueMinor, totals.spendMinor)}</strong><small>Ingresos ÷ gasto</small></article>
+        <article className="dashboard-metric-accent"><span>ROAS</span><strong>{formatDecimalRatio(totals.roas)}</strong><small>Ingresos ÷ gasto</small></article>
       </div>
 
       <div className="dashboard-table-card">
@@ -67,17 +116,20 @@ export default async function DashboardPage() {
         {snapshot && snapshot.rows.length > 0 ? (
           <div className="dashboard-table-scroll">
             <table>
-              <thead><tr><th>Fuente</th><th>Gasto</th><th>Instalaciones</th><th>CPI</th><th>Compradores</th><th>Ingresos</th><th>ROAS</th></tr></thead>
+              <thead><tr><th>Fuente</th><th>Gasto</th><th>Clics</th><th>Instalaciones</th><th>CPI</th><th>Compradores</th><th>CAC</th><th>Ingresos</th><th>ROAS</th><th>Retención D7</th></tr></thead>
               <tbody>
                 {snapshot.rows.map((row) => (
-                  <tr key={`${row.kind}-${row.name}`}>
+                  <tr key={row.sourceId ?? `${row.kind}-${row.name}`}>
                     <td><SourceDot kind={row.kind} /><strong>{row.name}</strong></td>
                     <td>{formatMinorUnits(row.spendMinor, app.currency)}</td>
+                    <td>{row.clicks.toLocaleString("es-ES")}</td>
                     <td>{row.installs.toLocaleString("es-ES")}</td>
-                    <td>{formatCostPerInstall(row.spendMinor, row.installs, app.currency)}</td>
+                    <td>{formatDecimalMoney(row.cpiMinor, app.currency)}</td>
                     <td>{row.buyers.toLocaleString("es-ES")}</td>
+                    <td>{formatDecimalMoney(row.cacMinor, app.currency)}</td>
                     <td>{formatMinorUnits(row.revenueMinor, app.currency)}</td>
-                    <td><strong>{formatRatio(row.revenueMinor, row.spendMinor)}</strong></td>
+                    <td><strong>{formatDecimalRatio(row.roas)}</strong></td>
+                    <td>{formatPercent(row.retentionD7)}</td>
                   </tr>
                 ))}
               </tbody>

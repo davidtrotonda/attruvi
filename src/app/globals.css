@@ -371,9 +371,13 @@ footer { min-height: 150px; padding: 44px max(24px, calc((100vw - 1100px) / 2));
 .dashboard-eyebrow { margin: 0 0 8px; color: var(--accent); font-family: var(--font-geist-mono), monospace; font-size: 9px; font-weight: 700; letter-spacing: .08em; }
 .dashboard-welcome h1 { margin: 0; font-size: clamp(36px, 4vw, 54px); letter-spacing: -.055em; }
 .dashboard-welcome > div:first-child > p:last-child { margin: 10px 0 0; color: #73737c; font-size: 14px; }
-.dashboard-date-filter { min-width: 165px; padding: 11px 13px; display: grid; gap: 4px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.dashboard-date-filter { min-width: min(100%, 560px); padding: 11px 13px; display: flex; flex-wrap: wrap; align-items: end; gap: 9px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.dashboard-date-filter label { display: grid; gap: 4px; }
 .dashboard-date-filter span { color: #92929a; font-size: 9px; text-transform: uppercase; }
 .dashboard-date-filter strong { font-size: 12px; }
+.dashboard-date-filter input,
+.dashboard-date-filter select { min-height: 34px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; }
+.dashboard-date-filter button { min-height: 34px; padding: 0 14px; border: 0; border-radius: 6px; background: var(--orange); color: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
 .dashboard-metrics { margin-top: 30px; display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
 .dashboard-metrics article { position: relative; min-height: 128px; padding: 22px; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
 .dashboard-metrics article:last-child { border-right: 0; }

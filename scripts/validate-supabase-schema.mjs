@@ -66,6 +66,9 @@ const requiredTables = [
   "postback_jobs",
   "postback_attempts",
   "daily_metrics",
+  "metric_dirty_days",
+  "metric_rollup_runs",
+  "metric_reconciliation_runs",
   "audit_log",
 ];
 
@@ -107,6 +110,14 @@ assert.match(migration, /create or replace function public\.assign_ad_cost_campa
 assert.match(migration, /create or replace function public\.schedule_due_connector_syncs\(/i);
 assert.match(migration, /create or replace function public\.read_ad_cost_totals\(/i);
 assert.match(migration, /create or replace function private\.apply_ad_cost_mapping\(/i);
+assert.match(migration, /create or replace function private\.compute_daily_metrics\(/i);
+assert.match(migration, /create or replace function public\.recalculate_daily_metrics\(/i);
+assert.match(migration, /create or replace function public\.reconcile_daily_metrics\(/i);
+assert.match(migration, /create or replace function public\.query_metric_rollups\(/i);
+assert.match(migration, /metric_version text not null/i);
+assert.match(migration, /ltv_eligible_d90 bigint not null/i);
+assert.match(migration, /uninstall_inferred bigint not null/i);
+assert.match(migration, /grant execute on function public\.recalculate_daily_metrics[\s\S]+to service_role/i);
 assert.match(migration, /create table private\.connector_secrets\s*\(/i);
 assert.match(migration, /grant execute on function public\.store_connector_secret[\s\S]+to service_role/i);
 assert.match(migration, /create index connector_sync_runs_claim_idx/i);
@@ -165,6 +176,10 @@ for (const proof of [
   "dato corregido posteriormente",
   "campaña eliminada",
   "monedas diferentes",
+  "denominadores cero",
+  "reconciliador detecta una desviación",
+  "recálculo incremental elimina la desviación",
+  "conservan los datos raw",
 ]) {
   assert.match(databaseTests, new RegExp(proof, "i"), `falta la prueba: ${proof}`);
 }

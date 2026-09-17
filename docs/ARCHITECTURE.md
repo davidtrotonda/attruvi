@@ -132,3 +132,19 @@ Cuando el sistema operativo abre la app directamente, puede no solicitar la ruta
 ## Escala
 
 `events`, `link_clicks` y `postback_attempts` empiezan sin particionar para evitar la complejidad de claves únicas globales durante la primera etapa. Todas las claves externas tienen índices de cobertura y la escritura de ingestión no realiza una llamada a Supabase por evento. La migración documenta el umbral y la retención. Al superar de forma sostenida 100 millones de filas, se crearán tablas mensuales por `occurred_at`, `clicked_at` y `attempted_at`, con escritura dirigida por mes, partición futura precreada y retirada de particiones vencidas. La idempotencia global seguirá en una tabla de claves compacta o se incluirá el mes en la clave de enrutamiento antes de migrar.
+
+## Motor de métricas
+
+```text
+raw clicks / costs / installations / sessions / revenue / uninstall inference
+  → trigger mínimo: marca app + entorno + día de cohorte
+  → cron reclama días con SKIP LOCKED
+  → compute_daily_metrics expande app → source → campaign → ad_group → ad
+  → daily_metrics (numeradores, denominadores, moneda, versión, raw_hash)
+  → reconcile_daily_metrics vuelve a calcular desde raw
+  → query_metric_rollups suma en Postgres y divide al final
+  → caché server-side por app
+  → dashboard filtrado, sin descargar eventos al navegador
+```
+
+Los eventos atrasados recalculan la cohorte desde raw; no modifican un porcentaje acumulado. El nivel `app` evita sumar niveles jerárquicos que se solapan. Las fórmulas, madurez, ceros, reembolsos, identidad y moneda están en `docs/METRICS.md`.

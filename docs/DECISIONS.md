@@ -126,3 +126,15 @@ Estado: aceptada. Cada fila usa unidades menores enteras, moneda original y una 
 ## ADR-030 — RPC administrativas de costes con validación interna
 
 Estado: aceptada. `enqueue_connector_sync`, `upsert_manual_ad_costs` y `assign_ad_cost_campaign` son `SECURITY DEFINER` porque realizan operaciones atómicas a través de tablas operativas cerradas por RLS. Es deliberado que `authenticated` pueda invocarlas: fijan `search_path`, comprueban `auth.uid()` y rol owner/admin contra la organización derivada de la cuenta/app, revocan `public` y `anon`, y no confían en un `organization_id` del cliente. El asesor de Supabase las señala como advertencia genérica; las funciones de secretos, persistencia y scheduling siguen limitadas a `service_role`.
+
+## ADR-031 — Cohortes de instalación y ratios desde sumas
+
+Estado: aceptada. `metric_date` es el día local de primera apertura en la zona horaria de la app. Retención y LTV usan cohortes maduras y ventanas naturales inclusivas; los ratios no se persisten ni se promedian entre días. La consulta suma numeradores y denominadores y divide al final con `numeric`; un denominador cero devuelve `NULL`.
+
+## ADR-032 — Rollups versionados, raw inmutable y reconciliación
+
+Estado: aceptada. `daily_metrics` es una proyección reconstruible, no la fuente de verdad. Los triggers solo marcan días afectados; un job de servicio agrupa rangos, recalcula bajo `metric_version`, conserva versiones anteriores y compara hashes contra raw. La caché por app expira en el mismo proceso que completa el recálculo.
+
+## ADR-033 — Moneda y plataforma sin asignaciones inventadas
+
+Estado: aceptada. Cada moneda mantiene su cubo y nunca se agrega con otra sin una tasa fechada. Al filtrar por plataforma se excluye gasto sin plataforma conocida; no se reparte proporcionalmente. Sin filtro, el servidor combina correctamente gasto no asignado y resultados iOS/Android.

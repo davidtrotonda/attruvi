@@ -425,7 +425,7 @@ insert into public.ad_costs (
   id, organization_id, app_id, source_id, campaign_id, ad_group_id, ad_id,
   provider, external_account_id, campaign_external_id, campaign_name,
   ad_group_external_id, ad_group_name, ad_external_id, ad_name,
-  cost_date, amount_minor, currency, impressions, clicks, external_row_id,
+  environment, cost_date, amount_minor, currency, impressions, clicks, external_row_id,
   external_entity_status, match_status
 )
 select
@@ -444,37 +444,23 @@ select
   'Grupo demo ' || n,
   'demo-ad-' || n,
   'Anuncio demo ' || n,
+  'development'::public.environment_kind,
   '2026-09-10'::date,
   case n when 1 then 3200 when 2 then 2500 when 3 then 1800 when 4 then 900 when 5 then 1200 else 0 end,
   'EUR', 10000 * n, 100 * n, 'demo-cost-' || n, 'active', 'matched'
 from generate_series(1, 6) as series(n)
 on conflict do nothing;
 
-insert into public.daily_metrics (
-  id, organization_id, app_id, metric_date, source_id, campaign_id, ad_group_id,
-  ad_id, currency, spend_minor, revenue_minor, clicks, installs,
-  registered_users, buyers, purchases, sessions, retained_d1, retained_d7,
-  retained_d30, metric_version
-)
-select
-  ('e0000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
-  '10000000-0000-4000-8000-000000000001'::uuid,
-  '20000000-0000-4000-8000-000000000001'::uuid,
-  '2026-09-10'::date,
-  ('30000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
-  ('40000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
-  ('50000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
-  ('60000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
-  'EUR',
-  case n when 1 then 3200 when 2 then 2500 when 3 then 1800 when 4 then 900 when 5 then 1200 else 0 end,
-  case n when 1 then 4990 when 2 then 2990 when 3 then 9990 else 0 end,
-  100 * n, case when n <= 5 then 1 else 0 end,
-  case when n <= 4 then 1 else 0 end,
-  case when n <= 3 then 1 else 0 end,
-  case when n <= 3 then 1 else 0 end,
-  case when n <= 5 then 2 else 0 end,
-  case when n <= 4 then 1 else 0 end,
-  case when n <= 3 then 1 else 0 end,
-  0, 'demo-v1'
-from generate_series(1, 6) as series(n)
-on conflict do nothing;
+do $$
+begin
+  perform set_config('request.jwt.claim.role', 'service_role', true);
+  perform public.recalculate_daily_metrics(
+    '20000000-0000-4000-8000-000000000001',
+    'development',
+    '2026-09-10',
+    '2026-09-10',
+    'metrics-v1',
+    '2026-12-31T23:59:59Z'
+  );
+end;
+$$;

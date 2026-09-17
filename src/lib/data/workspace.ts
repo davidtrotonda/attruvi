@@ -5,6 +5,12 @@ import {
   ensurePersonalWorkspace,
   type VerifiedIdentity,
 } from "@/lib/auth/session";
+import {
+  getMetricRowsForVerifiedApp,
+  type MetricEnvironment,
+  type MetricPlatform,
+  type MetricRollupRow,
+} from "@/lib/metrics/query";
 
 type OnboardingDraft = {
   android_package_name?: string;
@@ -51,98 +57,89 @@ export async function getWorkspace(identity: VerifiedIdentity) {
   };
 }
 
-type MetricRow = {
-  buyers: number | null;
-  installs: number | null;
-  revenue_minor: number | string | null;
-  source_id: string | null;
-  spend_minor: number | string | null;
-};
-
-function asBigInt(value: number | string | null) {
+function asBigInt(value: number | string | null | undefined) {
   if (value === null) return BigInt(0);
+  if (value === undefined) return BigInt(0);
   return BigInt(String(value));
 }
 
-export async function getDashboardSnapshot(identity: VerifiedIdentity) {
+export type DashboardMetricFilters = {
+  environment: MetricEnvironment;
+  from: string;
+  platform?: MetricPlatform;
+  to: string;
+};
+
+function toDashboardRow(metric: MetricRollupRow, kind: string) {
+  return {
+    buyers: metric.buyers,
+    cacMinor: metric.cac_minor === null ? null : String(metric.cac_minor),
+    clicks: metric.clicks,
+    cpiMinor: metric.cpi_minor === null ? null : String(metric.cpi_minor),
+    installs: metric.installs,
+    kind,
+    name: metric.source_name ?? "Sin fuente",
+    registeredUsers: metric.registered_users,
+    retentionD7: metric.retention_d7 === null ? null : String(metric.retention_d7),
+    revenueMinor: asBigInt(metric.revenue_minor).toString(),
+    roas: metric.roas === null ? null : String(metric.roas),
+    sourceId: metric.source_id,
+    spendMinor: asBigInt(metric.spend_minor).toString(),
+  };
+}
+
+export async function getDashboardSnapshot(
+  identity: VerifiedIdentity,
+  filters: DashboardMetricFilters,
+) {
   const workspace = await getWorkspace(identity);
   if (!workspace.app) return { ...workspace, snapshot: null };
 
-  const [{ data: metricData, error: metricError }, { data: sourceData, error: sourceError }] =
+  const queryBase = {
+    appId: workspace.app.id,
+    currency: workspace.app.currency,
+    environment: filters.environment,
+    from: filters.from,
+    ...(filters.platform ? { platform: filters.platform } : {}),
+    to: filters.to,
+  } as const;
+  const [totalsData, sourceMetrics, { data: sourceData, error: sourceError }] =
     await Promise.all([
-      workspace.client
-        .from("daily_metrics")
-        .select("source_id,spend_minor,revenue_minor,installs,buyers")
-        .eq("app_id", workspace.app.id)
-        .order("metric_date", { ascending: false })
-        .limit(500),
+      getMetricRowsForVerifiedApp({ ...queryBase, level: "app" }, workspace.client),
+      getMetricRowsForVerifiedApp({ ...queryBase, level: "source" }, workspace.client),
       workspace.client
         .from("sources")
-        .select("id,name,kind")
-        .eq("app_id", workspace.app.id)
-        .order("created_at", { ascending: true }),
+        .select("id,kind")
+        .eq("app_id", workspace.app.id),
     ]);
 
-  if (metricError || sourceError) {
+  if (sourceError) {
     throw new Error("No se han podido cargar las métricas del panel.");
   }
 
-  const metrics = (metricData ?? []) as MetricRow[];
   const sources = new Map(
     (sourceData ?? []).map((source) => [source.id, source]),
   );
-  const grouped = new Map<
-    string,
-    { buyers: number; installs: number; revenue: bigint; spend: bigint }
-  >();
-
-  for (const metric of metrics) {
-    const sourceId = metric.source_id ?? "unknown";
-    const current = grouped.get(sourceId) ?? {
-      buyers: 0,
-      installs: 0,
-      revenue: BigInt(0),
-      spend: BigInt(0),
-    };
-    current.buyers += metric.buyers ?? 0;
-    current.installs += metric.installs ?? 0;
-    current.revenue += asBigInt(metric.revenue_minor);
-    current.spend += asBigInt(metric.spend_minor);
-    grouped.set(sourceId, current);
-  }
-
-  const rows = [...grouped.entries()]
-    .map(([sourceId, totals]) => ({
-      ...totals,
-      kind: sources.get(sourceId)?.kind ?? "other",
-      name: sources.get(sourceId)?.name ?? "Sin fuente",
-      revenueMinor: totals.revenue.toString(),
-      spendMinor: totals.spend.toString(),
-    }))
-    .sort((left, right) => {
-      if (left.revenue === right.revenue) return 0;
-      return left.revenue > right.revenue ? -1 : 1;
-    });
-
-  const totals = rows.reduce(
-    (result, row) => ({
-      buyers: result.buyers + row.buyers,
-      installs: result.installs + row.installs,
-      revenue: result.revenue + row.revenue,
-      spend: result.spend + row.spend,
-    }),
-    { buyers: 0, installs: 0, revenue: BigInt(0), spend: BigInt(0) },
+  const rows = sourceMetrics.map((metric) =>
+    toDashboardRow(metric, sources.get(metric.source_id ?? "")?.kind ?? "other"),
   );
+  const totals = totalsData[0] ?? null;
 
   return {
     ...workspace,
     snapshot: {
       rows,
       totals: {
-        buyers: totals.buyers,
-        installs: totals.installs,
-        revenueMinor: totals.revenue.toString(),
-        spendMinor: totals.spend.toString(),
+        buyers: totals?.buyers ?? 0,
+        clicks: totals?.clicks ?? 0,
+        installs: totals?.installs ?? 0,
+        registeredUsers: totals?.registered_users ?? 0,
+        retentionD7: totals?.retention_d7 === null || totals?.retention_d7 === undefined
+          ? null
+          : String(totals.retention_d7),
+        revenueMinor: asBigInt(totals?.revenue_minor).toString(),
+        roas: totals?.roas === null || totals?.roas === undefined ? null : String(totals.roas),
+        spendMinor: asBigInt(totals?.spend_minor).toString(),
       },
     },
   };

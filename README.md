@@ -55,6 +55,8 @@ El orden de evidencia, la exactitud real por plataforma y la explicación de dec
 
 La configuración, versiones oficiales, seguridad de tokens, sincronización incremental y formato CSV de los costes están en `docs/AD_COST_CONNECTORS.md`.
 
+Las fórmulas exactas de CPI, CAC, ROAS, retención, conversiones y LTV, junto con cohortes, datos tardíos, reconciliación y benchmark, están en `docs/METRICS.md`.
+
 ## Licencia
 
 MIT

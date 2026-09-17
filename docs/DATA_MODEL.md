@@ -15,7 +15,7 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 | Calidad de usuario | `installation_activity_metrics`, `app_user_metrics`, `push_token_invalidations`, `uninstall_inferences` | Sesiones, actividad, registro, LTV por moneda e inferencias basadas en señales reales |
 | Costes | `connector_accounts`, `connector_sync_runs`, `ad_costs`, `ad_cost_mappings`, `private.connector_secrets` | Configuración pública minimizada, jobs, gasto diario, asignaciones y tokens cifrados fuera del esquema expuesto |
 | Postbacks | `postback_destinations`, `postback_jobs`, `postback_attempts` | Mapeo y outbox reclamable de forma concurrente |
-| Lectura y control | `daily_metrics`, `audit_log` | Agregados de dashboard y trazabilidad administrativa |
+| Lectura y control | `daily_metrics`, `metric_dirty_days`, `metric_rollup_runs`, `metric_reconciliation_runs`, `audit_log` | Agregados versionados, cola de recálculo, reconciliación y trazabilidad administrativa |
 
 ## Reglas estructurales
 
@@ -38,6 +38,8 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 - Los costes tienen unicidad por cuenta y `external_row_id`; una corrección del proveedor actualiza importes/contadores y aumenta `correction_version`. `match_status` distingue filas relacionadas, pendientes y asignadas manualmente.
 - `connector_sync_runs` conserva ventana, solapamiento, versión de API, cursor, checkpoint, intentos y próximo reintento. `schedule_due_connector_syncs` crea como máximo un trabajo diario abierto por cuenta.
 - `private.connector_secrets` solo contiene ciphertext AES-GCM, vector de inicialización y versión de clave. `service_role` es el único rol con RPC de lectura/escritura; la clave maestra reside en secretos del servidor, no en Postgres.
+- `daily_metrics` conserva numeradores y denominadores por cohorte, nivel, entorno, plataforma y moneda. `query_metric_rollups` deriva los ratios; `raw_hash`, `metric_version` y `data_through_at` permiten reproducir cada fila.
+- `metric_dirty_days` deduplica cambios tardíos por app/entorno/fecha. `metric_rollup_runs` registra rango, versión, frescura, duración y resultado; `metric_reconciliation_runs` conserva conteos y una muestra segura de diferencias.
 
 ## RLS
 

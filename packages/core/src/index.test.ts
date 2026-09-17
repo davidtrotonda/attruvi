@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  divideMetricTotals,
   eventEnvelopeSchema,
+  metricQuerySchema,
   moneySchema,
   parseUtcDateTime,
   sdkEventEnvelopeSchema,
@@ -27,6 +29,28 @@ describe("contratos centrales", () => {
     });
 
     expect(money.valueMinor).toBe(9007199254740993123n);
+  });
+
+  it("mantiene ratios exactos y representa división por cero como ausencia", () => {
+    expect(divideMetricTotals(4_000n, 10_000n)).toEqual({ numerator: 4_000n, denominator: 10_000n });
+    expect(divideMetricTotals(4_000n, 0n)).toBeNull();
+  });
+
+  it("valida filtros reproducibles de métricas", () => {
+    expect(metricQuerySchema.parse({
+      appId: ids.app,
+      currency: "EUR",
+      environment: "production",
+      from: "2026-09-01",
+      to: "2026-09-17",
+    }).level).toBe("source");
+    expect(metricQuerySchema.safeParse({
+      appId: ids.app,
+      currency: "EUR",
+      environment: "production",
+      from: "2026-09-18",
+      to: "2026-09-17",
+    }).success).toBe(false);
   });
 
   it("valida una compra y rechaza moneda no ISO", () => {

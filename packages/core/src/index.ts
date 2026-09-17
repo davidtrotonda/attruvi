@@ -376,3 +376,32 @@ export type Postback = z.output<typeof postbackSchema>;
 export function parseUtcDateTime(value: unknown): UtcDateTime {
   return utcDateTimeSchema.parse(value);
 }
+
+export const metricLevelSchema = z.enum(["app", "source", "campaign", "ad_group", "ad"]);
+export const metricGranularitySchema = z.enum(["total", "day"]);
+export const metricDateSchema = z.iso.date();
+export const metricQuerySchema = z
+  .object({
+    appId: appIdSchema,
+    environment: sdkEnvironmentSchema,
+    from: metricDateSchema,
+    to: metricDateSchema,
+    level: metricLevelSchema.default("source"),
+    granularity: metricGranularitySchema.default("total"),
+    currency: currencySchema,
+    platform: sdkPlatformSchema.optional(),
+    sourceId: sourceIdSchema.optional(),
+  })
+  .strict()
+  .refine((query) => query.from <= query.to, {
+    message: "La fecha inicial no puede ser posterior a la final",
+    path: ["from"],
+  });
+
+export type MetricQuery = z.output<typeof metricQuerySchema>;
+export type ExactRatio = Readonly<{ denominator: bigint; numerator: bigint }>;
+
+/** Conserva el ratio exacto hasta el límite de presentación. */
+export function divideMetricTotals(numerator: bigint, denominator: bigint): ExactRatio | null {
+  return denominator === 0n ? null : { denominator, numerator };
+}
