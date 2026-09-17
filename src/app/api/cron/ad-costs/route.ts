@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { runAdvertisingCostSyncBatch } from "@/lib/connectors/sync";
+import { runPostbackBatch } from "@/lib/postbacks/worker";
 
 export const maxDuration = 60;
 
@@ -14,7 +15,11 @@ function authorized(request: Request) {
 async function run(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   try {
-    return NextResponse.json(await runAdvertisingCostSyncBatch(10), { headers: { "Cache-Control": "no-store" } });
+    const [costs, postbacks] = await Promise.all([
+      runAdvertisingCostSyncBatch(10),
+      runPostbackBatch(25),
+    ]);
+    return NextResponse.json({ costs, postbacks }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "No se ha podido ejecutar la sincronización." }, { status: 503 });
   }

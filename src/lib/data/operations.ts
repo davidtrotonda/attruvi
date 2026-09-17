@@ -4,6 +4,18 @@ import type { VerifiedIdentity } from "@/lib/auth/session";
 import { getDashboardContext, type DashboardSelection, type OrganizationRole } from "@/lib/data/dashboard-context";
 
 const PAGE_SIZE = 25;
+const EMPTY_POSTBACK_STATS = {
+  average_latency_ms: 0,
+  pending: 0,
+  permanently_failed: 0,
+  p95_latency_ms: 0,
+  processing: 0,
+  retryable_failed: 0,
+  skipped: 0,
+  succeeded: 0,
+  success_rate: 0,
+  total: 0,
+};
 
 export async function getEventsDashboard(
   identity: VerifiedIdentity,
@@ -44,30 +56,43 @@ export async function getPostbacksDashboard(
 ) {
   const context = await getDashboardContext(identity, filters);
   const app = context.selectedApp;
-  if (!app) return { ...context, destinations: [], jobs: [], page: 1, pageCount: 0, stats: {}, total: 0 };
+  if (!app) return { ...context, connectorAccounts: [], destinations: [], errors: [], jobs: [], lastSentAt: null, page: 1, pageCount: 0, stats: EMPTY_POSTBACK_STATS, total: 0 };
   let query = context.client
     .from("postback_jobs")
-    .select("id,destination_id,status,attempt_count,last_error_code,created_at,completed_at,next_attempt_at", { count: "exact" })
+    .select("id,destination_id,status,attempt_count,max_attempts,last_error_code,last_http_status,latency_ms,skip_reason,provider_request_id,created_at,completed_at,next_attempt_at,replayed_from_job_id", { count: "exact" })
     .eq("app_id", app.id);
   if (filters.status) query = query.eq("status", filters.status);
   const start = (filters.page - 1) * PAGE_SIZE;
-  const [jobsResult, destinationsResult, statsResult] = await Promise.all([
+  const [jobsResult, destinationsResult, summaryResult, accountsResult] = await Promise.all([
     query.order("created_at", { ascending: false }).range(start, start + PAGE_SIZE - 1),
-    context.client.from("postback_destinations").select("id,provider,name,event_name,status,send_value").eq("app_id", app.id),
-    context.client.from("postback_jobs").select("status").eq("app_id", app.id).limit(10_000),
+    context.client.from("postback_destinations").select("id,provider,name,event_name,provider_event_name,external_conversion_id,connector_account_id,status,send_value,value_mode,currency_mode,fixed_value_minor,fixed_currency,api_version,last_tested_at,last_test_status,last_test_error_code").eq("app_id", app.id).order("created_at", { ascending: true }),
+    context.client.rpc("get_postback_dashboard_summary", { requested_app_id: app.id }),
+    context.client.from("connector_accounts").select("id,provider,account_name,external_account_hint,connection_state,api_version").eq("app_id", app.id).in("provider", ["google_ads", "meta_ads", "tiktok_ads"]).order("created_at", { ascending: true }),
   ]);
-  if (jobsResult.error || destinationsResult.error || statsResult.error) throw new Error("No se han podido cargar los postbacks.");
+  if (jobsResult.error || destinationsResult.error || summaryResult.error || accountsResult.error) throw new Error("No se han podido cargar los postbacks.");
   const destinations = destinationsResult.data ?? [];
   const destinationById = new Map(destinations.map((destination) => [destination.id, destination]));
-  const stats = (statsResult.data ?? []).reduce<Record<string, number>>((result, row) => {
-    result[row.status] = (result[row.status] ?? 0) + 1;
-    return result;
-  }, {});
+  const summary = Array.isArray(summaryResult.data) ? summaryResult.data[0] : summaryResult.data;
+  const stats: Record<string, number> = {
+    average_latency_ms: Number(summary?.average_latency_ms ?? 0),
+    pending: Number(summary?.pending ?? 0),
+    permanently_failed: Number(summary?.permanently_failed ?? 0),
+    p95_latency_ms: Number(summary?.p95_latency_ms ?? 0),
+    processing: Number(summary?.processing ?? 0),
+    retryable_failed: Number(summary?.retryable_failed ?? 0),
+    skipped: Number(summary?.skipped ?? 0),
+    succeeded: Number(summary?.succeeded ?? 0),
+    success_rate: Number(summary?.success_rate ?? 0),
+    total: Number(summary?.total ?? 0),
+  };
   const total = jobsResult.count ?? 0;
   return {
     ...context,
+    connectorAccounts: accountsResult.data ?? [],
     destinations,
+    errors: Array.isArray(summary?.errors) ? summary.errors as Array<{ code: string; count: number }> : [],
     jobs: (jobsResult.data ?? []).map((job) => ({ ...job, destination: destinationById.get(job.destination_id) ?? null })),
+    lastSentAt: summary?.last_sent_at as string | null | undefined,
     page: filters.page,
     pageCount: Math.ceil(total / PAGE_SIZE),
     stats,

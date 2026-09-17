@@ -52,6 +52,11 @@ Actualizado: 2026-09-17.
 - Las lecturas de métricas usan caché de servicio cuando existe una identidad server-side y caen de forma segura al cliente autenticado con RLS cuando Vercel no dispone de esa clave; el dashboard no deja de funcionar por una optimización opcional.
 - La verificación visual autenticada cubre Resumen y Campañas a 1440 px, Resumen móvil a 390 px, navegación por teclado y ausencia de overflow; el gráfico usa un título SVG estable para hidratar sin diferencias entre servidor y navegador.
 - Gestión de equipo owner/admin/viewer mediante invitaciones de un solo uso: solo se almacena SHA-256 del token, el correo autenticado debe coincidir y las escrituras directas de membresía están revocadas para impedir saltarse la auditoría o el último owner.
+- Pipeline de postbacks server-side con adaptadores fijados a Google Ads `v25`, Meta `v26.0` y TikTok `v1.3`, elegibilidad por consentimiento y click ID real, y valor/moneda configurables.
+- Outbox transaccional desde `events`, reclamación con lease y `SKIP LOCKED`, event ID estable, ocho intentos, `Retry-After`, backoff con jitter, renovación de Google/TikTok, dead-letter y replay owner/admin auditado.
+- Pruebas de configuración sin conversiones productivas: `validate_only` de Google, Test Events de Meta y validación read-only/local de TikTok; ningún conector inventa un identificador.
+- Panel de postbacks con mapeos, pausa/activación, credenciales pendientes, volumen, éxito, latencia p95, códigos de error, último envío, historial anonimizado y replay.
+- Clientes falsos estrictos y fixtures para éxito, duplicado, rate limit, token caducado, campo rechazado, caída de red, consentimiento ausente y refresh de TikTok.
 - `docs/METRICS.md`, fixture exacto de 33 assertions y benchmark de un millón de hechos sintéticos.
 - OpenAPI, ejemplos ficticios, entorno local con Miniflare, adaptador en memoria exclusivo de pruebas y prueba de carga medida.
 - Todas las migraciones aplicadas al proyecto Supabase Attruvi. Las 55 claves externas cuentan con índice de cobertura y la función técnica de auto-RLS no es ejecutable por `anon` ni `authenticated`.
@@ -63,22 +68,22 @@ Actualizado: 2026-09-17.
 - `npm run test:web`: registro, verificación, contraseña incorrecta, recuperación, Google OAuth simulado, callback seguro y clasificación de rutas privadas.
 - `npm run test:db`: aislamiento RLS e invariantes en Postgres local; necesita `supabase start` y Docker.
 
-En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 25 pruebas web, 51 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El Worker de ingestión aporta 11 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada, nunca encola IP/agente en claro y rechaza una desinstalación enviada por el SDK. El build incluye el dashboard completo, sus nueve destinos principales, `/invite/[token]` y el cron `/api/cron/metrics`; el Worker de enlaces mantiene sus 13 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas.
+En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 26 pruebas web, 58 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El Worker de ingestión aporta 11 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada, nunca encola IP/agente en claro y rechaza una desinstalación enviada por el SDK. El build incluye el dashboard completo, sus nueve destinos principales, `/invite/[token]`, `/api/cron/metrics` y `/api/cron/postbacks`; el Worker de enlaces mantiene sus 13 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas.
 
-Las suites pgTAP tienen 137 assertions. Aunque `npm run test:db` local no estuvo disponible porque este equipo no tiene Docker, las 24 assertions de esquema, 21 del motor de atribución, 23 de actividad, 24 de costes, 33 del motor de métricas y 12 de acceso al dashboard pasaron contra el proyecto Supabase Attruvi dentro de transacciones revertidas. Además cubren dinero exacto, división por cero, aislamiento RLS, retención y LTV maduros, reembolsos, datos tardíos, reconciliación, preservación raw, invitaciones, roles y bloqueo de escrituras directas de membresía.
+Las suites pgTAP tienen 161 assertions. Aunque `npm run test:db` local no estuvo disponible porque este equipo no tiene Docker, las 24 assertions de esquema, 21 del motor de atribución, 23 de actividad, 24 de costes, 33 del motor de métricas, 12 de acceso al dashboard y 24 del pipeline de postbacks pasaron contra el proyecto Supabase Attruvi dentro de transacciones revertidas. Además cubren dinero exacto, división por cero, aislamiento RLS, retención y LTV maduros, reembolsos, datos tardíos, reconciliación, preservación raw, invitaciones, roles, outbox, deduplicación, replay auditado y bloqueo de escrituras directas.
 
 El benchmark SQL del 17-09-2026 expandió 1.000.000 de hechos a 5.000.000 de filas y 80.370 grupos en 5,335 s en Supabase, con 7,1 MB de memoria de hash y 36 MB temporales. Mide el núcleo sintético de agrupación, no garantiza latencia end-to-end.
 
 La prueba de carga local más reciente aceptó 5.000/5.000 solicitudes con concurrencia 100 en 1.025 ms: 4.878,05 solicitudes/s, p50 13 ms y p95 27 ms. Mide validación, controles y cola en memoria; no se presenta como rendimiento de red de Cloudflare o Supabase.
 
-Los asesores remotos de Supabase no reportan claves externas sin índice ni nuevas alertas RLS. Permanecen quince advertencias esperadas por RPC autenticadas `SECURITY DEFINER`: las once anteriores y las cuatro operaciones de equipo, todas justificadas en `DECISIONS.md`; también índices aún “sin uso” porque la base está recién creada y el ajuste externo del pool de Auth.
+Los asesores remotos de Supabase no reportan claves externas sin índice ni nuevas alertas RLS. Permanecen dieciséis advertencias esperadas por RPC autenticadas `SECURITY DEFINER`: las quince anteriores y el replay de postback owner/admin, todas justificadas en `DECISIONS.md`; también índices aún “sin uso” porque la base está recién creada y el ajuste externo del pool de Auth.
 
 La fase del SDK superó TypeScript estricto con los tipos de React Native 0.87, 9 pruebas unitarias y `npm pack`. El tarball generado se instaló en una app limpia RN 0.87 con `newArchEnabled=true`; el autolinking detectó Android e iOS. La compilación Android no pudo ejecutarse porque este equipo no tiene JDK ni Android SDK, y la compilación iOS requiere macOS/Xcode.
 
 ## Pendiente de fases posteriores
 
 - Credenciales de desarrollador y aprobación externa de Google Ads, Meta Ads y TikTok Ads; los conectores quedan implementados y muestran “Pendiente de credenciales” hasta recibirlas.
-- Envío final de postbacks de conversión a las redes en producción.
+- Credenciales reales, IDs de conversión/dataset/event source y aprobación de los tres proveedores para activar postbacks en producción; el código queda funcional y en “Pendiente de credenciales” hasta entonces.
 - Verificadores oficiales de App Attest y Play Integrity; el contrato está preparado pero no se marca ningún token como verificado todavía.
 - Credenciales y conectores de validación de recibos para App Store, Google Play o RevenueCat; hasta entonces los ingresos se muestran como declarados, no verificados.
 

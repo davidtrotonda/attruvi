@@ -154,3 +154,15 @@ Estado: aceptada. Una cifra no se interpreta igual si el gasto está pendiente o
 ## ADR-037 — Errores públicos seguros y SVG hidratable
 
 Estado: aceptada. La frontera de error del dashboard muestra una explicación recuperable y una referencia técnica, pero no expone mensajes internos del servidor. Los títulos accesibles del gráfico SVG se construyen como una única cadena: el DOM que interpreta el navegador coincide así con el HTML del servidor y la hidratación de React permanece estable en producción.
+
+## ADR-038 — Outbox transaccional y payload efímero
+
+Estado: aceptada. Insertar un evento y su trabajo de postback ocurre en la misma transacción. El worker reclama y confirma el lease antes de hacer red; ninguna transacción de base permanece abierta durante una llamada externa. El outbox solo guarda IDs y metadatos operativos. Consentimiento, clic y valor se leen de filas autoritativas y el payload se construye en memoria justo antes del envío, por lo que tokens, click IDs y PII no terminan en jobs, intentos o logs.
+
+## ADR-039 — Elegibilidad cerrada y deduplicación del proveedor
+
+Estado: aceptada. Sin consentimiento `granted` o sin `gclid`/`gbraid`/`wbraid`, `fbclid` o `ttclid` obtenido del clic atribuido, el trabajo es `skipped`. Nunca se inventa una señal ni se llama éxito a una omisión. Reintentos y replay conservan el `event_id`; Google usa `order_id` cuando existe y Meta/TikTok reciben `event_id`, de modo que el proveedor puede deduplicar una entrega incierta.
+
+## ADR-040 — Pruebas de proveedor que no contaminan campañas
+
+Estado: aceptada. Google se prueba con `validate_only` y Meta con `test_event_code`. La versión fijada de TikTok Events API 2.0 no ofrece un modo universal que garantice no entregar, por lo que Attruvi limita “Probar” a una lectura de cuenta y validación local del payload. La interfaz explica la diferencia y nunca envía una conversión falsa para simular éxito.

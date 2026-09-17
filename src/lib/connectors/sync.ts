@@ -2,13 +2,11 @@ import "server-only";
 
 import {
   ConnectorError,
-  refreshConnectorCredentials,
-  type ConnectorCredentials,
   type NormalizedAdCost,
 } from "@attruvi/connectors";
 import { createAdvertisingConnector } from "./runtime";
-import { isRemoteConnectorProvider, providerEnvironment, type RemoteConnectorProvider } from "./catalog";
-import { readConnectorCredentials, storeConnectorCredentials } from "./secrets";
+import { isRemoteConnectorProvider, providerEnvironment } from "./catalog";
+import { getFreshConnectorCredentials } from "./credentials";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 type SyncRun = {
@@ -42,20 +40,6 @@ function serializableCost(row: NormalizedAdCost) {
   };
 }
 
-async function freshCredentials(provider: RemoteConnectorProvider, accountId: string, credentials: ConnectorCredentials) {
-  if (!credentials.expiresAt || Date.parse(credentials.expiresAt) > Date.now() + 60_000) return credentials;
-  const environment = providerEnvironment(provider);
-  if (!environment.clientId || !environment.clientSecret || !credentials.refreshToken) throw new ConnectorError("token_expired", "The connector must be authorized again.");
-  const refreshed = await refreshConnectorCredentials({
-    clientId: environment.clientId,
-    clientSecret: environment.clientSecret,
-    credentials,
-    provider,
-  });
-  await storeConnectorCredentials(accountId, refreshed);
-  return refreshed;
-}
-
 async function processRun(run: SyncRun) {
   const service = createSupabaseServiceClient();
   const { data: accountData, error: accountError } = await service
@@ -67,8 +51,7 @@ async function processRun(run: SyncRun) {
   const account = accountData as ConnectorAccountRow;
   if (!isRemoteConnectorProvider(account.provider) || !account.external_account_id) throw new Error("connector_configuration_invalid");
   const provider = account.provider;
-  let credentials = await readConnectorCredentials(account.id);
-  credentials = await freshCredentials(provider, account.id, credentials);
+  const credentials = await getFreshConnectorCredentials(provider, account.id);
   const connector = createAdvertisingConnector(provider);
   const environment = providerEnvironment(provider);
   let cursor: string | undefined;
