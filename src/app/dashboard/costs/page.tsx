@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { currencyExponent } from "@attruvi/connectors";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireVerifiedIdentity } from "@/lib/auth/session";
 import { getAdvertisingCosts } from "@/lib/data/costs";
 import { addManualCostsAction, assignCostCampaignAction, enqueueCostSyncAction } from "./actions";
@@ -28,11 +27,12 @@ const statusLabel: Record<string, string> = {
 export default async function CostsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ app?: string; assigned?: string; connected?: string; error?: string; manual?: string; setup?: string; sync?: string }>;
+  searchParams: Promise<{ app?: string; assigned?: string; connected?: string; environment?: string; error?: string; manual?: string; setup?: string; sync?: string; workspace?: string }>;
 }) {
   const identity = await requireVerifiedIdentity();
   const params = await searchParams;
-  const management = await getAdvertisingCosts(identity, params.app);
+  const management = await getAdvertisingCosts(identity, params.app, params.workspace);
+  const canConfigure = management.role === "owner" || management.role === "admin";
   const today = new Date().toISOString().slice(0, 10);
   const message = params.connected
     ? "Cuenta publicitaria conectada. La primera sincronización está en cola."
@@ -45,7 +45,7 @@ export default async function CostsPage({
           : null;
 
   return (
-    <DashboardShell active="costs" appName={management.selectedApp?.name} displayName={identity.displayName} organizationName={management.organization.name}>
+    <>
       <div className="management-heading">
         <div>
           <p className="dashboard-eyebrow">COSTES PUBLICITARIOS</p>
@@ -59,7 +59,7 @@ export default async function CostsPage({
 
       {management.apps.length > 0 ? (
         <nav aria-label="Selecciona una aplicación" className="app-tabs">
-          {management.apps.map((app) => <Link className={app.id === management.selectedApp?.id ? "active" : undefined} href={`/dashboard/costs?app=${app.id}`} key={app.id}>{app.name}</Link>)}
+          {management.apps.map((app) => <Link className={app.id === management.selectedApp?.id ? "active" : undefined} href={`/dashboard/integrations?workspace=${encodeURIComponent(management.organization.slug)}&app=${encodeURIComponent(app.slug)}&environment=${encodeURIComponent(params.environment ?? "production")}`} key={app.id}>{app.name}</Link>)}
         </nav>
       ) : null}
 
@@ -84,10 +84,10 @@ export default async function CostsPage({
                 return (
                   <article className="connector-card" key={configuration.provider}>
                     <div className={`connector-logo connector-logo-${providerClass[configuration.provider]}`}>{configuration.label.slice(0, 1)}</div>
-                    <div className="connector-card-title"><div><h3>{configuration.label}</h3><span>API {configuration.apiVersion}</span></div><Link href={`/api/connectors/${configuration.provider}/start?app=${management.selectedApp?.id}`}>{accounts.length ? "Añadir otra cuenta" : `Conectar ${configuration.label.replace(" Ads", "")}`}</Link></div>
+                    <div className="connector-card-title"><div><h3>{configuration.label}</h3><span>API {configuration.apiVersion}</span></div>{canConfigure ? <Link href={`/api/connectors/${configuration.provider}/start?app=${management.selectedApp?.id}`}>{accounts.length ? "Añadir otra cuenta" : `Conectar ${configuration.label.replace(" Ads", "")}`}</Link> : null}</div>
                     {accounts.length > 0 ? <div className="connector-accounts">{accounts.map((account) => {
                       const syncAction = enqueueCostSyncAction.bind(null, account.id, management.selectedApp!.id);
-                      return <div key={account.id}><div><strong>{account.account_name || configuration.label}</strong><span>{account.external_account_hint || "Identificador oculto"} · {account.account_currency || management.selectedApp?.currency}</span></div><div><span className={`connector-state connector-state-${account.connection_state}`}>{statusLabel[account.connection_state] || account.connection_state}</span><small>{account.last_synced_at ? `Último sync ${new Date(account.last_synced_at).toLocaleDateString("es-ES")}` : "Sin sincronizar"}</small></div><form action={syncAction}><button type="submit">Sincronizar</button></form></div>;
+                      return <div key={account.id}><div><strong>{account.account_name || configuration.label}</strong><span>{account.external_account_hint || "Identificador oculto"} · {account.account_currency || management.selectedApp?.currency}</span></div><div><span className={`connector-state connector-state-${account.connection_state}`}>{statusLabel[account.connection_state] || account.connection_state}</span><small>{account.last_synced_at ? `Último sync ${new Date(account.last_synced_at).toLocaleDateString("es-ES")}` : "Sin sincronizar"}</small></div>{canConfigure ? <form action={syncAction}><button type="submit">Sincronizar</button></form> : null}</div>;
                     })}</div> : <p className="connector-empty-copy">Todavía no hay ninguna cuenta de {configuration.label} conectada.</p>}
                     {showSetup && !configuration.configured ? <details className="connector-setup" open={params.setup === configuration.provider}><summary>Qué falta configurar</summary><ol>{configuration.pendingSteps.map((step) => <li key={step}>{step}</li>)}</ol><p>Variables en Vercel</p><code>{configuration.environmentNames.join(" · ")}</code><p>URL callback exacta</p><code>{configuration.callbackUrl}</code><a href={configuration.documentationUrl} rel="noreferrer" target="_blank">Abrir documentación oficial ↗</a></details> : null}
                   </article>
@@ -96,7 +96,7 @@ export default async function CostsPage({
             </div>
           </section>
 
-          <section className="manual-cost-section">
+          {canConfigure ? <section className="manual-cost-section">
             <div className="cost-section-heading"><div><span>02</span><h2>Añadir coste manual</h2></div><p>Para afiliados, influencers u otras fuentes sin integración. Puedes guardar un día, repartir un total por rango o cargar CSV.</p></div>
             <form action={addManualCostsAction} className="manual-cost-form">
               <input name="app_id" type="hidden" value={management.selectedApp.id} />
@@ -110,12 +110,12 @@ export default async function CostsPage({
               <label className="manual-file-field"><span>CSV</span><input accept=".csv,text/csv" name="csv" type="file" /><small>Columnas obligatorias: date, amount, currency. Máximo 1.000 filas.</small></label>
               <button type="submit">Guardar costes</button>
             </form>
-          </section>
+          </section> : <div className="permission-banner"><span aria-hidden="true">◉</span><div><strong>Integraciones en solo lectura</strong><p>Tu rol viewer puede consultar estados y costes, pero no conectar cuentas ni modificar datos.</p></div></div>}
 
           <section className="unmatched-section">
             <div className="cost-section-heading"><div><span>03</span><h2>Sin relacionar</h2></div><p>Estos importes se conservan. Asígnalos a una campaña cuando reconozcas su identificador.</p></div>
             {management.unmatched.length > 0 ? <div className="unmatched-table-wrap"><table className="unmatched-table"><thead><tr><th>Origen</th><th>Fecha</th><th>Campaña recibida</th><th>Coste</th><th>Asignar a</th></tr></thead><tbody>{management.unmatched.map((cost) => (
-              <tr key={cost.id}><td>{cost.provider.replace("_ads", "")}</td><td>{new Date(`${cost.cost_date}T00:00:00Z`).toLocaleDateString("es-ES")}</td><td><strong>{cost.campaign_name || "Sin nombre"}</strong><small>{cost.campaign_external_id ? `····${cost.campaign_external_id.slice(-4)}` : cost.unmatched_reason || "Sin identificador"}</small></td><td>{formatMoney(BigInt(cost.amount_minor), cost.currency)}</td><td>{cost.campaign_external_id && management.campaigns.length > 0 ? <form action={assignCostCampaignAction}><input name="app_id" type="hidden" value={management.selectedApp.id} /><input name="cost_id" type="hidden" value={cost.id} /><select aria-label="Campaña de Attruvi" name="campaign_id" required><option value="">Elige campaña</option>{management.campaigns.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.name}</option>)}</select><button type="submit">Asignar</button></form> : <span>Falta ID de campaña</span>}</td></tr>
+              <tr key={cost.id}><td>{cost.provider.replace("_ads", "")}</td><td>{new Date(`${cost.cost_date}T00:00:00Z`).toLocaleDateString("es-ES")}</td><td><strong>{cost.campaign_name || "Sin nombre"}</strong><small>{cost.campaign_external_id ? `····${cost.campaign_external_id.slice(-4)}` : cost.unmatched_reason || "Sin identificador"}</small></td><td>{formatMoney(BigInt(cost.amount_minor), cost.currency)}</td><td>{canConfigure && cost.campaign_external_id && management.campaigns.length > 0 ? <form action={assignCostCampaignAction}><input name="app_id" type="hidden" value={management.selectedApp.id} /><input name="cost_id" type="hidden" value={cost.id} /><select aria-label="Campaña de Attruvi" name="campaign_id" required><option value="">Elige campaña</option>{management.campaigns.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.name}</option>)}</select><button type="submit">Asignar</button></form> : <span>{canConfigure ? "Falta ID de campaña" : "Solo lectura"}</span>}</td></tr>
             ))}</tbody></table></div> : <div className="cost-empty-state"><span aria-hidden="true">✓</span><div><h3>Todo está relacionado</h3><p>No hay costes esperando asignación.</p></div></div>}
           </section>
 
@@ -125,6 +125,6 @@ export default async function CostsPage({
           })}</div></section> : null}
         </>
       )}
-    </DashboardShell>
+    </>
   );
 }

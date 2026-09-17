@@ -14,6 +14,7 @@ El objetivo es conectar campañas publicitarias con instalaciones, compras, ingr
 - Atribución de instalaciones y actividad posterior: sesiones, registro, compras, suscripciones, reembolsos y LTV observado.
 - Explorador anonimizado de usuarios con el recorrido clic → instalación → sesiones → ingresos → postbacks.
 - Medición de ingresos, ROAS, LTV y retención.
+- Dashboard de decisiones con comparación de periodos, jerarquía campaña → grupo → anuncio, estados de calidad de datos, filtros compartibles y gestión de equipos owner/admin/viewer.
 - Importación de costes de Google Ads, Meta Ads y TikTok Ads, además de entrada diaria, por rango y CSV.
 - Postbacks server-side para Google Ads, Meta Ads y TikTok Ads.
 - Despliegue propio y trazabilidad completa de los datos.

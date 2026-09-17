@@ -55,10 +55,12 @@ type InstallationRow = {
 export async function getAttributionManagement(
   identity: VerifiedIdentity,
   requestedAppId?: string,
+  requestedWorkspace?: string,
 ) {
-  const context = await getAppsManagement(identity);
+  const context = await getAppsManagement(identity, requestedAppId, requestedWorkspace);
   const selectedApp =
     context.apps.find((app) => app.id === requestedAppId) ??
+    context.apps.find((app) => app.slug === requestedAppId) ??
     context.apps.find((app) => app.status === "active") ??
     context.apps[0] ??
     null;

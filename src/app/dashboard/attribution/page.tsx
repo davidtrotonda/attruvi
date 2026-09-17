@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireVerifiedIdentity } from "@/lib/auth/session";
 import { getAttributionManagement } from "@/lib/data/attribution";
 
@@ -30,19 +29,14 @@ function dateTime(value: string) {
 export default async function AttributionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ app?: string }>;
+  searchParams: Promise<{ app?: string; environment?: string; workspace?: string }>;
 }) {
   const identity = await requireVerifiedIdentity();
   const params = await searchParams;
-  const management = await getAttributionManagement(identity, params.app);
+  const management = await getAttributionManagement(identity, params.app, params.workspace);
 
   return (
-    <DashboardShell
-      active="attribution"
-      appName={management.selectedApp?.name}
-      displayName={identity.displayName}
-      organizationName={management.organization.name}
-    >
+    <>
       <div className="management-heading">
         <div>
           <p className="dashboard-eyebrow">ATRIBUCIÓN EXPLICABLE</p>
@@ -59,7 +53,7 @@ export default async function AttributionPage({
           {management.apps.map((app) => (
             <Link
               className={app.id === management.selectedApp?.id ? "active" : undefined}
-              href={`/dashboard/attribution?app=${app.id}`}
+              href={`/dashboard/acquisition?workspace=${encodeURIComponent(management.organization.slug)}&app=${encodeURIComponent(app.slug)}&environment=${encodeURIComponent(params.environment ?? "production")}`}
               key={app.id}
             >
               {app.name}
@@ -191,6 +185,6 @@ export default async function AttributionPage({
           )}
         </>
       )}
-    </DashboardShell>
+    </>
   );
 }

@@ -138,3 +138,15 @@ Estado: aceptada. `daily_metrics` es una proyección reconstruible, no la fuente
 ## ADR-033 — Moneda y plataforma sin asignaciones inventadas
 
 Estado: aceptada. Cada moneda mantiene su cubo y nunca se agrega con otra sin una tasa fechada. Al filtrar por plataforma se excluye gasto sin plataforma conocida; no se reparte proporcionalmente. Sin filtro, el servidor combina correctamente gasto no asignado y resultados iOS/Android.
+
+## ADR-034 — Contexto del dashboard por slugs y autorización por UUID
+
+Estado: aceptada. Las URLs compartibles solo incluyen slug de organización, slug de app, entorno y filtros no sensibles. El servidor resuelve esos valores dentro de las membresías visibles por RLS y solo entonces usa los UUID internos. Las consultas de métricas verifican acceso con el cliente autenticado antes de entrar en la caché de servicio; el navegador nunca recibe eventos crudos ni identificadores internos innecesarios.
+
+## ADR-035 — Invitaciones con token efímero y escritura auditada
+
+Estado: aceptada. El owner crea un token aleatorio de 256 bits y Postgres solo conserva su SHA-256. Aceptarlo exige sesión verificada, correo coincidente, estado pendiente y vigencia. Crear invitaciones, aceptar y cambiar roles son RPC `SECURITY DEFINER` con `search_path` vacío, grants mínimos y validaciones internas; leer el equipo también valida membresía antes de consultar `auth.users`. Las escrituras directas de `organization_members` quedan revocadas para `authenticated`, de modo que nadie puede eludir la auditoría ni degradar al último owner.
+
+## ADR-036 — Estado de calidad separado de las métricas
+
+Estado: aceptada. Una cifra no se interpreta igual si el gasto está pendiente o un conector sigue sincronizando. El dashboard deriva un estado explícito —completo, parcial, sincronizando o sin costes— desde cuentas, jobs y filas sin relacionar. Una cuenta sin hechos muestra pasos de onboarding y nunca rellena tarjetas con números de demo.

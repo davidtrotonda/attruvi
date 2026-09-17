@@ -12,6 +12,7 @@ type ExplorerFilters = {
   payer?: string;
   platform?: string;
   user?: string;
+  workspace?: string;
 };
 
 type UserMetricRow = {
@@ -61,9 +62,10 @@ function platformFilter(raw?: string): "android" | "ios" | undefined {
 }
 
 export async function getUserExplorer(identity: VerifiedIdentity, filters: ExplorerFilters) {
-  const context = await getAppsManagement(identity);
+  const context = await getAppsManagement(identity, filters.app, filters.workspace);
   const selectedApp =
     context.apps.find((app) => app.id === filters.app) ??
+    context.apps.find((app) => app.slug === filters.app) ??
     context.apps.find((app) => app.status === "active") ??
     context.apps[0] ??
     null;

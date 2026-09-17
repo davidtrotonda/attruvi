@@ -1,8 +1,8 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { ensurePersonalWorkspace, type VerifiedIdentity } from "@/lib/auth/session";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { VerifiedIdentity } from "@/lib/auth/session";
+import { getDashboardContext } from "@/lib/data/dashboard-context";
 import {
   buildSmartLinkUrl,
   smartLinkSourceKinds,
@@ -77,18 +77,6 @@ function sourceKind(value: string): SmartLinkSourceKind {
     ? (value as SmartLinkSourceKind)
     : "other";
 }
-async function getManagementContext(identity: VerifiedIdentity) {
-  const client = await createSupabaseServerClient();
-  const ensured = await ensurePersonalWorkspace(client, identity.displayName);
-  const { data: organization, error } = await client
-    .from("organizations")
-    .select("id,name")
-    .eq("id", ensured.organizationId)
-    .single();
-  if (error || !organization) throw new Error("No se ha podido cargar el proyecto.");
-  return { client, organization };
-}
-
 async function readApps(client: SupabaseClient, organizationId: string) {
   const [{ data: appRows, error: appError }, { data: platformRows, error: platformError }] =
     await Promise.all([
@@ -122,8 +110,14 @@ async function readApps(client: SupabaseClient, organizationId: string) {
   });
 }
 
-export async function getAppsManagement(identity: VerifiedIdentity) {
-  const { client, organization } = await getManagementContext(identity);
+export async function getAppsManagement(
+  identity: VerifiedIdentity,
+  requestedApp?: string,
+  requestedWorkspace?: string,
+) {
+  const dashboard = await getDashboardContext(identity, { app: requestedApp, workspace: requestedWorkspace });
+  const { client, organization } = dashboard;
+  if (!organization) throw new Error("No se ha podido cargar el proyecto.");
   const [apps, { data: linkRows, error: linkError }] = await Promise.all([
     readApps(client, organization.id),
     client.from("smart_links").select("app_id").eq("organization_id", organization.id),
@@ -135,16 +129,20 @@ export async function getAppsManagement(identity: VerifiedIdentity) {
     apps: apps.map((app) => ({ ...app, smartLinkCount: counts.get(app.id) ?? 0 })),
     client,
     organization,
+    role: dashboard.role,
+    selectedApp: dashboard.selectedApp,
   };
 }
 
 export async function getSmartLinksManagement(
   identity: VerifiedIdentity,
   requestedAppId?: string,
+  requestedWorkspace?: string,
 ) {
-  const context = await getAppsManagement(identity);
+  const context = await getAppsManagement(identity, requestedAppId, requestedWorkspace);
   const selectedApp =
     context.apps.find((app) => app.id === requestedAppId) ??
+    context.apps.find((app) => app.slug === requestedAppId) ??
     context.apps.find((app) => app.status === "active") ??
     context.apps[0] ??
     null;

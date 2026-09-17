@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { CopyLinkButton } from "@/components/smart-links/link-actions";
 import { SmartLinkForm } from "@/components/smart-links/smart-link-form";
 import { setSmartLinkStatusAction } from "@/app/dashboard/links/actions";
@@ -10,19 +9,20 @@ import { smartLinkSourceLabels } from "@/lib/smart-links/shared";
 export default async function SmartLinksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ app?: string; cache?: string; edit?: string; new?: string; saved?: string }>;
+  searchParams: Promise<{ app?: string; cache?: string; edit?: string; environment?: string; new?: string; saved?: string; workspace?: string }>;
 }) {
   const identity = await requireVerifiedIdentity();
   const params = await searchParams;
-  const management = await getSmartLinksManagement(identity, params.app);
+  const management = await getSmartLinksManagement(identity, params.app, params.workspace);
   const editedLink = management.links.find((link) => link.id === params.edit);
-  const showForm = params.new === "1" || Boolean(editedLink);
+  const canConfigure = management.role === "owner" || management.role === "admin";
+  const showForm = canConfigure && (params.new === "1" || Boolean(editedLink));
 
   return (
-    <DashboardShell active="links" appName={management.selectedApp?.name} displayName={identity.displayName} organizationName={management.organization.name}>
+    <>
       <div className="management-heading">
         <div><p className="dashboard-eyebrow">ENLACES INTELIGENTES</p><h1>Del anuncio a tu app</h1><p>Crea un enlace por campaña o anuncio. Attruvi registra el clic y abre directamente la app, la tienda o tu web.</p></div>
-        {management.selectedApp && !showForm ? <Link className="management-primary-link" href={`/dashboard/links?app=${management.selectedApp.id}&new=1`}>Crear enlace</Link> : null}
+        {management.selectedApp && !showForm && canConfigure ? <Link className="management-primary-link" href={`/dashboard/links?workspace=${encodeURIComponent(management.organization.slug)}&app=${encodeURIComponent(management.selectedApp.slug)}&new=1`}>Crear enlace</Link> : null}
       </div>
 
       {params.saved ? (
@@ -34,7 +34,7 @@ export default async function SmartLinksPage({
 
       {management.apps.length > 0 ? (
         <nav aria-label="Selecciona una aplicación" className="app-tabs">
-          {management.apps.map((app) => <Link className={app.id === management.selectedApp?.id ? "active" : undefined} href={`/dashboard/links?app=${app.id}`} key={app.id}>{app.name}<small>{app.smartLinkCount}</small></Link>)}
+          {management.apps.map((app) => <Link className={app.id === management.selectedApp?.id ? "active" : undefined} href={`/dashboard/links?workspace=${encodeURIComponent(management.organization.slug)}&app=${encodeURIComponent(app.slug)}&environment=${encodeURIComponent(params.environment ?? "production")}`} key={app.id}>{app.name}<small>{app.smartLinkCount}</small></Link>)}
         </nav>
       ) : null}
 
@@ -63,16 +63,16 @@ export default async function SmartLinksPage({
                 </div>
                 <div className="smart-link-card-actions">
                   <a href={link.testUrl} rel="noreferrer" target="_blank">Probar <span aria-hidden="true">↗</span></a>
-                  <Link href={`/dashboard/links?app=${management.selectedApp?.id}&edit=${link.id}`}>Editar</Link>
-                  <form action={statusAction}><button type="submit">{link.status === "active" ? "Desactivar" : "Activar"}</button></form>
+                  {canConfigure ? <Link href={`/dashboard/links?workspace=${encodeURIComponent(management.organization.slug)}&app=${encodeURIComponent(management.selectedApp?.slug ?? "")}&edit=${link.id}`}>Editar</Link> : null}
+                  {canConfigure ? <form action={statusAction}><button type="submit">{link.status === "active" ? "Desactivar" : "Activar"}</button></form> : null}
                 </div>
               </article>
             );
           })}
         </div>
       ) : (
-        <div className="management-empty"><span aria-hidden="true">↗</span><h2>Crea tu primer enlace</h2><p>Elige el origen, el anuncio y las tiendas. Al compartirlo, no habrá ninguna pantalla de redirección.</p><Link className="management-primary-link" href={`/dashboard/links?app=${management.selectedApp.id}&new=1`}>Crear enlace</Link></div>
+        <div className="management-empty"><span aria-hidden="true">↗</span><h2>{canConfigure ? "Crea tu primer enlace" : "Aún no hay enlaces"}</h2><p>Elige el origen, el anuncio y las tiendas. Al compartirlo, no habrá ninguna pantalla de redirección.</p>{canConfigure ? <Link className="management-primary-link" href={`/dashboard/links?workspace=${encodeURIComponent(management.organization.slug)}&app=${encodeURIComponent(management.selectedApp.slug)}&new=1`}>Crear enlace</Link> : null}</div>
       )}
-    </DashboardShell>
+    </>
   );
 }

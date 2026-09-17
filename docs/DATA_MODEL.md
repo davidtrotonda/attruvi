@@ -6,7 +6,7 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 
 | Área | Tablas | Función |
 |---|---|---|
-| Personas y acceso | `profiles`, `organizations`, `organization_members` | Perfil global y pertenencia con roles owner/admin/viewer |
+| Personas y acceso | `profiles`, `organizations`, `organization_members`, `organization_invitations` | Perfil global, pertenencia con roles owner/admin/viewer e invitaciones de un solo uso con token hasheado |
 | Apps | `apps`, `app_platforms`, `public_sdk_keys` | Configuración, identificadores iOS/Android y claves públicas hasheadas/revocables |
 | Jerarquía publicitaria | `sources`, `campaigns`, `ad_groups`, `ads` | Fuente → campaña → grupo → anuncio con claves externas y consistencia de tenant |
 | Enlaces | `smart_links`, `link_destinations`, `link_clicks` | Configuración, destinos y clics idempotentes |
@@ -40,12 +40,13 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 - `private.connector_secrets` solo contiene ciphertext AES-GCM, vector de inicialización y versión de clave. `service_role` es el único rol con RPC de lectura/escritura; la clave maestra reside en secretos del servidor, no en Postgres.
 - `daily_metrics` conserva numeradores y denominadores por cohorte, nivel, entorno, plataforma y moneda. `query_metric_rollups` deriva los ratios; `raw_hash`, `metric_version` y `data_through_at` permiten reproducir cada fila.
 - `metric_dirty_days` deduplica cambios tardíos por app/entorno/fecha. `metric_rollup_runs` registra rango, versión, frescura, duración y resultado; `metric_reconciliation_runs` conserva conteos y una muestra segura de diferencias.
+- `organization_invitations` conserva correo normalizado, rol, expiración y solo el SHA-256 del token. La aceptación exige que el correo de `auth.users` coincida; toda creación, aceptación o modificación de rol deja una entrada en `audit_log`.
 
 ## RLS
 
 Todas las tablas públicas tienen RLS activado. `anon` no recibe privilegios. Un usuario autenticado puede leer una fila solo cuando `private.is_organization_member(organization_id)` valida su membresía. `owner` y `admin` pueden mutar tablas de configuración; `viewer` no.
 
-Las dos funciones `SECURITY DEFINER` de `private` son helpers internos para evitar recursión sobre `organization_members`. Las seis RPC públicas de onboarding y gestión de apps/enlaces requieren privilegios elevados para escribir varias tablas en una sola transacción. Todas comprueban `auth.uid()`, fijan `search_path = ''`, revocan acceso a `public` y `anon`, y nunca aceptan un identificador de organización enviado por el cliente. Este uso deliberado queda documentado aunque el asesor de Supabase lo muestre como advertencia genérica. `resolve_smart_link` y las RPC de ingestión solo pueden ejecutarlas `service_role`. La función técnica `rls_auto_enable` tampoco es ejecutable por `anon` ni `authenticated`. La reclamación de postbacks es `SECURITY INVOKER` y también queda restringida al servicio.
+Las dos funciones `SECURITY DEFINER` de `private` son helpers internos para evitar recursión sobre `organization_members`. Las RPC públicas de onboarding, apps, enlaces, costes y equipo requieren privilegios elevados para completar operaciones atómicas. Todas comprueban `auth.uid()`, fijan `search_path = ''` y revocan acceso a `public` y `anon`; cuando una RPC acepta una organización, deriva el permiso de una membresía owner validada, nunca confía en ese UUID por sí solo. La lectura del equipo acepta una organización pero exige pertenencia antes de consultar `auth.users`. Las escrituras directas de membresía están revocadas para `authenticated`: los cambios de rol solo pasan por la RPC auditada que protege al último owner. Este uso deliberado queda documentado aunque el asesor de Supabase lo muestre como advertencia genérica. `resolve_smart_link` y las RPC de ingestión solo pueden ejecutarlas `service_role`. La función técnica `rls_auto_enable` tampoco es ejecutable por `anon` ni `authenticated`. La reclamación de postbacks es `SECURITY INVOKER` y también queda restringida al servicio.
 
 ## Particionado y retención
 

@@ -1,25 +1,25 @@
 import Link from "next/link";
 import { AppForm } from "@/components/apps/app-form";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { requireVerifiedIdentity } from "@/lib/auth/session";
 import { getAppsManagement } from "@/lib/data/apps";
 
 export default async function AppsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ edit?: string; new?: string; saved?: string }>;
+  searchParams: Promise<{ app?: string; edit?: string; environment?: string; new?: string; saved?: string; workspace?: string }>;
 }) {
   const identity = await requireVerifiedIdentity();
-  const { apps, organization } = await getAppsManagement(identity);
   const params = await searchParams;
+  const { apps, organization, role } = await getAppsManagement(identity, params.app, params.workspace);
   const editedApp = apps.find((app) => app.id === params.edit);
-  const showForm = params.new === "1" || Boolean(editedApp);
+  const canConfigure = role === "owner" || role === "admin";
+  const showForm = canConfigure && (params.new === "1" || Boolean(editedApp));
 
   return (
-    <DashboardShell active="apps" appName={editedApp?.name ?? apps[0]?.name} displayName={identity.displayName} organizationName={organization.name}>
+    <>
       <div className="management-heading">
         <div><p className="dashboard-eyebrow">APLICACIONES</p><h1>Tus apps React Native</h1><p>Cada app mantiene separados sus enlaces, clics, atribuciones, eventos e ingresos.</p></div>
-        {!showForm ? <Link className="management-primary-link" href="/dashboard/apps?new=1">Añadir app</Link> : null}
+        {!showForm && canConfigure ? <Link className="management-primary-link" href={`/dashboard/apps?workspace=${encodeURIComponent(organization.slug)}&new=1`}>Añadir app</Link> : null}
       </div>
 
       {params.saved ? <p className="management-notice" role="status">{params.saved === "updated" ? "App actualizada correctamente." : "App creada correctamente."}</p> : null}
@@ -34,13 +34,14 @@ export default async function AppsPage({
               {app.androidPackageName ? <div><dt>Package name</dt><dd>{app.androidPackageName}</dd></div> : null}
               <div><dt>Datos</dt><dd>{app.currency} · {app.timezone}</dd></div>
             </dl>
-            <div className="app-card-actions"><Link href={`/dashboard/links?app=${app.id}`}>Ver enlaces</Link><Link href={`/dashboard/apps?edit=${app.id}`}>Editar</Link></div>
+            <div className="app-card-actions"><Link href={`/dashboard/links?workspace=${encodeURIComponent(organization.slug)}&app=${encodeURIComponent(app.slug)}`}>Ver enlaces</Link>{canConfigure ? <Link href={`/dashboard/apps?workspace=${encodeURIComponent(organization.slug)}&app=${encodeURIComponent(app.slug)}&edit=${app.id}`}>Editar</Link> : null}</div>
           </article>
         ))}
         {apps.length === 0 ? <div className="management-empty"><span aria-hidden="true">▣</span><h2>Aún no hay aplicaciones</h2><p>Añade la primera para empezar a crear enlaces.</p></div> : null}
       </div>
 
+      {!canConfigure ? <div className="permission-banner"><span aria-hidden="true">◉</span><div><strong>Acceso de solo lectura</strong><p>Un viewer puede consultar las apps, pero no crearlas ni editarlas.</p></div></div> : null}
       {showForm ? <AppForm app={editedApp} /> : null}
-    </DashboardShell>
+    </>
   );
 }

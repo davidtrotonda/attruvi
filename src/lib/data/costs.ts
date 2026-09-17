@@ -55,9 +55,9 @@ function configuredOrigin() {
   return "https://www.attruvi.com";
 }
 
-export async function getAdvertisingCosts(identity: VerifiedIdentity, requestedAppId?: string) {
-  const context = await getAppsManagement(identity);
-  const selectedApp = context.apps.find((app) => app.id === requestedAppId) ?? context.apps.find((app) => app.status === "active") ?? context.apps[0] ?? null;
+export async function getAdvertisingCosts(identity: VerifiedIdentity, requestedAppId?: string, requestedWorkspace?: string) {
+  const context = await getAppsManagement(identity, requestedAppId, requestedWorkspace);
+  const selectedApp = context.apps.find((app) => app.id === requestedAppId) ?? context.apps.find((app) => app.slug === requestedAppId) ?? context.apps.find((app) => app.status === "active") ?? context.apps[0] ?? null;
   const configurations = remoteConnectorProviders.map((provider) => {
     const environment = providerEnvironment(provider);
     return {
