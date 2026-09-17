@@ -30,6 +30,7 @@ export const managedAppSchema = z
     iosBundleId: optionalText(255),
     name: z.string().trim().min(2, "Escribe el nombre de la app.").max(120),
     platform: z.enum(["ios", "android", "both"]),
+    sessionTimeoutMinutes: z.coerce.number().int().min(5).max(1440).default(30),
     status: z.enum(["active", "paused", "disabled"]),
     timezone: z.string().trim().min(1).max(120),
   })

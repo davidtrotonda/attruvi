@@ -48,6 +48,16 @@ const requiredTables = [
   "sessions",
   "purchases",
   "subscriptions",
+  "app_users",
+  "app_user_installations",
+  "activity_sessions",
+  "revenue_ledger",
+  "revenue_validations",
+  "subscription_events",
+  "push_token_invalidations",
+  "uninstall_inferences",
+  "installation_activity_metrics",
+  "app_user_metrics",
   "connector_accounts",
   "connector_sync_runs",
   "ad_costs",
@@ -84,6 +94,12 @@ assert.match(migration, /create or replace function public\.resolve_smart_link\(
 assert.match(migration, /create or replace function public\.resolve_ingest_app_key\(provided_key_hash text\)/i);
 assert.match(migration, /create or replace function public\.ingest_sdk_messages\(payload jsonb\)/i);
 assert.match(migration, /create or replace function public\.ingest_sdk_messages_v2\(payload jsonb\)/i);
+assert.match(migration, /create or replace function public\.ingest_sdk_messages_v3\(payload jsonb\)/i);
+assert.match(migration, /session_timeout_minutes smallint not null default 30/i);
+assert.match(migration, /revenue_reported_minor bigint/i);
+assert.match(migration, /revenue_verified_minor bigint/i);
+assert.match(migration, /unique \(app_id, transaction_id, event_type\)/i);
+assert.match(migration, /create or replace function public\.record_push_token_invalidation\(/i);
 assert.match(migration, /create or replace function public\.attribute_installation\(/i);
 assert.match(migration, /create or replace function public\.get_attribution_explanation\(/i);
 assert.match(migration, /create or replace function public\.read_sdk_attribution\(/i);
@@ -126,6 +142,12 @@ for (const proof of [
   "sin consentimiento",
   "iOS sin señal",
   "dry-run",
+  "compra duplicada",
+  "reembolso",
+  "renovación",
+  "eventos fuera de orden",
+  "monedas diferentes",
+  "borrado de usuario",
 ]) {
   assert.match(databaseTests, new RegExp(proof, "i"), `falta la prueba: ${proof}`);
 }

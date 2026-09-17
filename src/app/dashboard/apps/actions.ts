@@ -24,6 +24,7 @@ export async function saveAppAction(
     iosBundleId: String(formData.get("ios_bundle_id") ?? ""),
     name: String(formData.get("name") ?? ""),
     platform: String(formData.get("platform") ?? "both"),
+    sessionTimeoutMinutes: String(formData.get("session_timeout_minutes") ?? "30"),
     status: String(formData.get("status") ?? "active"),
     timezone: String(formData.get("timezone") ?? "Europe/Madrid"),
   });
@@ -33,7 +34,7 @@ export async function saveAppAction(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.rpc("upsert_personal_app", {
+  const { data, error } = await supabase.rpc("upsert_personal_app", {
     payload: {
       android_package_name: parsed.data.androidPackageName || null,
       app_id: parsed.data.appId || null,
@@ -53,6 +54,14 @@ export async function saveAppAction(
         : "No se ha podido guardar la app. Inténtalo de nuevo.",
     };
   }
+
+  const savedAppId = parsed.data.appId || data?.[0]?.app_id;
+  if (!savedAppId) return { message: "La app se guardó, pero no se pudo configurar su sesión." };
+  const { error: timeoutError } = await supabase.rpc("set_app_session_timeout", {
+    requested_app_id: savedAppId,
+    requested_timeout_minutes: parsed.data.sessionTimeoutMinutes,
+  });
+  if (timeoutError) return { message: "La app se guardó, pero no se pudo configurar su sesión." };
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/apps");

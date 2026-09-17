@@ -7,7 +7,7 @@
 ```text
 SDK → límites de cuerpo → appKey cacheada → contrato/PII/reloj → rate limit
     → Queue (202 rápido) → consumidor de hasta 50 mensajes
-    → una RPC Supabase → instalaciones/sesiones/eventos/ingresos/atribución
+    → una RPC Supabase → log idempotente → sesiones/identidad/ingresos/atribución
                          ↘ dead-letter segura, sin payload, si el fallo es permanente
 ```
 
@@ -27,7 +27,7 @@ La capa de App Attest/Play Integrity está preparada mediante `attestation_mode`
 
 La configuración positiva de una app se conserva en KV entre 5 y 300 segundos, limitada además por `APP_CONFIG_CACHE_TTL_SECONDS`; el valor por defecto es 60. Una clave desconocida se cachea solo 15 segundos. Por tanto, una revocación puede tardar como máximo el menor de ambos TTL en propagarse a un edge que ya tenía una entrada válida.
 
-El consumidor llama a `ingest_sdk_messages_v2`. Esa RPC persiste primero el lote idempotente y
+El consumidor llama a `ingest_sdk_messages_v3`. Esa RPC persiste primero el lote idempotente y
 después atribuye la adquisición cuando contiene `install`, o la reactivación cuando una sesión nueva
 contiene `app_open`/`session_start`. Solo si la regla activa permite coincidencia probabilística el
 Worker añade dos hashes minimizados; nunca encola la IP o el agente de usuario originales.
@@ -64,7 +64,8 @@ El contrato completo está en `workers/ingest/openapi.yaml`.
 
 ## Reintentos, DLQ y observabilidad
 
-- Queue entrega al menos una vez; `event_id`, `idempotency_key`, instalación, sesión, compra y suscripción tienen conflictos idempotentes.
+- Queue entrega al menos una vez; `event_id`, `idempotency_key` e instalación tienen conflictos idempotentes. El libro mayor añade `(app_id, transaction_id, event_type)` para evitar duplicar compras, renovaciones o reembolsos.
+- `uninstall_inferred` se rechaza en esta API: solo el backend push puede crearlo tras evidencia persistente.
 - Los estados `408`, `425`, `429` y `5xx` de Supabase se reintentan con backoff. Los fallos permanentes y los reintentos agotados producen una entrada DLQ que solo contiene IDs operativos, intento y motivo seguro.
 - La DLQ es explícita: no se configura el reenvío automático de Cloudflare porque copiaría el mensaje original completo. Si la propia DLQ está temporalmente caída, el consumidor reintenta el original hasta poder escribir el sobre sanitizado.
 - No se imprimen cuerpos, claves, tokens, traits ni propiedades. Los logs contienen ruta, `request_id` y clase del error.

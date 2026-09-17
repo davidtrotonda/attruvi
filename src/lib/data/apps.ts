@@ -14,6 +14,7 @@ type AppRow = {
   currency: string;
   id: string;
   name: string;
+  session_timeout_minutes: number;
   slug: string;
   status: "active" | "disabled" | "paused";
   timezone: string;
@@ -93,7 +94,7 @@ async function readApps(client: SupabaseClient, organizationId: string) {
     await Promise.all([
       client
         .from("apps")
-        .select("id,name,slug,status,currency,timezone,created_at")
+        .select("id,name,slug,status,currency,timezone,session_timeout_minutes,created_at")
         .eq("organization_id", organizationId)
         .order("created_at", { ascending: true }),
       client
@@ -108,6 +109,7 @@ async function readApps(client: SupabaseClient, organizationId: string) {
     const appPlatforms = platforms.filter((platform) => platform.app_id === app.id);
     return {
       ...app,
+      sessionTimeoutMinutes: app.session_timeout_minutes,
       androidPackageName:
         appPlatforms.find((platform) => platform.platform === "android")?.android_package_name ?? null,
       iosBundleId:

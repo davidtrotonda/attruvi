@@ -60,14 +60,17 @@ React Native SDK
   → Rate Limiting de Cloudflare por IP y por app
   → Queue: attruvi-ingest-events
   → consumidor de hasta 50 mensajes
-  → una RPC ingest_sdk_messages_v2(jsonb)
-  → instalaciones / identidades / sesiones / eventos / ingresos / atribución
+  → una RPC ingest_sdk_messages_v3(jsonb)
+  → log idempotente + identidad segura + atribución histórica
+  → sesiones reconstruibles + libro mayor + suscripciones + métricas
   ├─ éxito: ack + métricas de persistencia y lag
   ├─ temporal: reintento exponencial
   └─ permanente/agota reintentos: DLQ sin payload ni PII
 ```
 
 `GET /v1/attribution` no acepta solo la appKey. Exige `installation_id` y el token emitido al registrar esa instalación; Postgres conserva únicamente su hash. App Attest/Play Integrity tiene un punto de extensión y un modo `required` que falla de forma cerrada, pero el MVP no finge validar un token hasta conectar los verificadores oficiales.
+
+La actividad posterior usa dos capas. `events` y `sessions` conservan el mensaje original del SDK; `activity_sessions`, `revenue_ledger` y las métricas son proyecciones reconstruibles. Esta separación permite insertar un evento atrasado sin alterar arbitrariamente el historial contable. `identify` solo fusiona un perfil anónimo con el mismo hash conocido y bloquea cualquier conflicto entre dos identidades conocidas.
 
 ## Motor de atribución
 

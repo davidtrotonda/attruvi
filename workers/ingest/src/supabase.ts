@@ -114,7 +114,7 @@ export async function persistIngestMessages(
   env: Env,
   messages: readonly QueuedIngestMessage[],
 ): Promise<PersistenceResult> {
-  const value = await callRpc(env, "ingest_sdk_messages_v2", { payload: { messages } });
+  const value = await callRpc(env, "ingest_sdk_messages_v3", { payload: { messages } });
   const parsed = persistenceResultSchema.safeParse(value);
   if (!parsed.success) throw new SupabasePersistenceError(422, false);
   return parsed.data;

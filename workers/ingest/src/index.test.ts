@@ -185,6 +185,34 @@ describe("API pública de ingestión", () => {
     expect(await response.json()).toMatchObject({ code: "event_in_future" });
   });
 
+  it("rechaza desinstalaciones declaradas por el SDK y reembolsos positivos", async () => {
+    const handler = createIngestHandler(createMemoryRuntime({ configuration: appConfiguration }));
+    const uninstall = eventBody({
+      events: [{ ...eventBody().events[0], name: "uninstall_inferred", properties: {} }],
+    });
+    const uninstallResponse = await handler(post("/v1/events/batch", uninstall));
+    expect(uninstallResponse.status).toBe(400);
+    expect(await uninstallResponse.json()).toMatchObject({
+      code: "uninstall_requires_server_evidence",
+    });
+
+    const refund = eventBody({
+      events: [{
+        ...eventBody().events[0],
+        name: "refund",
+        properties: {
+          currency: "EUR",
+          originalTransactionId: "order-42",
+          transactionId: "refund-42",
+          valueMinor: "4990",
+        },
+      }],
+    });
+    const refundResponse = await handler(post("/v1/events/batch", refund));
+    expect(refundResponse.status).toBe(400);
+    expect(await refundResponse.json()).toMatchObject({ code: "invalid_events_payload" });
+  });
+
   it("rechaza claves revocadas, rate limit y origen lógico incorrecto", async () => {
     const revoked = createMemoryRuntime({
       configuration: { ...appConfiguration, status: "revoked" },

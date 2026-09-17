@@ -94,3 +94,19 @@ Estado: aceptada. No se usa fingerprinting persistente. La opción probabilísti
 completo, base legal explícita, dos hashes salados y una ventana corta. Los Workers comparten el salt
 sin guardarlo en Git; la base solo recibe hashes y una explicación minimizada. El resultado siempre se
 etiqueta `probabilistic` y nunca determinista. iOS sin señal permitida cae en evidencia insuficiente.
+
+## ADR-023 — Log inmutable y proyecciones reconstruibles
+
+Estado: aceptada. `events` conserva el transporte idempotente. La agrupación de 30 minutos se calcula en `activity_sessions` ordenando por tiempo del dispositivo y desempate estable. Cuando llega un evento atrasado, solo se reconstruye su instalación. Esto evita confiar en un `sessionId` arbitrario o en el orden de Queue.
+
+## ADR-024 — Identidad explícita sin fusión probabilística
+
+Estado: aceptada. Una instalación comienza anónima. `identify` puede asignar el primer hash conocido o unir una reinstalación al mismo hash; si el perfil ya tiene otro hash, falla. No se fusionan perfiles por IP, dispositivo, similitud o atribución. El borrado elimina identificadores y conserva únicamente el historial anonimizado necesario para métricas y contabilidad.
+
+## ADR-025 — Libro mayor en lugar de saldos mutables
+
+Estado: aceptada. Compras, renovaciones y reembolsos son apuntes independientes con unicidad por app, transacción y tipo. Los reembolsos siempre son negativos. Las proyecciones se recalculan desde el libro mayor y conservan monedas por separado. Revenue declarado y verificado son campos y estados distintos.
+
+## ADR-026 — Desinstalación siempre inferida
+
+Estado: aceptada. El SDK no puede declarar una desinstalación. Solo una invalidación persistente de token push, repetida y separada al menos 24 horas, crea una inferencia con evidencia y confianza. La interfaz usa siempre “inferida” y permite retractarla; no existe el estado “confirmada”.

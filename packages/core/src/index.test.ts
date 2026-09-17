@@ -4,6 +4,7 @@ import {
   eventEnvelopeSchema,
   moneySchema,
   parseUtcDateTime,
+  sdkEventEnvelopeSchema,
 } from "./index.js";
 
 const ids = {
@@ -55,6 +56,34 @@ describe("contratos centrales", () => {
           ...purchase.event,
           properties: { ...purchase.event.properties, currency: "euro" },
         },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("valida productos y exige que los reembolsos sean negativos", () => {
+    const base = {
+      eventId: ids.event,
+      installationId: ids.installation,
+      anonymousId: "21000000-0000-4000-8000-000000000001",
+      sessionId: "22000000-0000-4000-8000-000000000001",
+      occurredAt: "2026-09-17T10:00:00Z",
+      idempotencyKey: "refund:demo:001",
+      name: "refund",
+      properties: {
+        transactionId: "refund-001",
+        originalTransactionId: "demo-order-001",
+        valueMinor: "-4990",
+        currency: "EUR",
+        quantity: 1,
+        products: [{ productId: "premium", quantity: 1 }],
+      },
+    };
+
+    expect(sdkEventEnvelopeSchema.safeParse(base).success).toBe(true);
+    expect(
+      sdkEventEnvelopeSchema.safeParse({
+        ...base,
+        properties: { ...base.properties, valueMinor: "4990" },
       }).success,
     ).toBe(false);
   });

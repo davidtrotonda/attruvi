@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { signOutAction } from "@/app/auth/actions";
 
-type DashboardSection = "apps" | "attribution" | "links" | "summary";
+type DashboardSection = "apps" | "attribution" | "links" | "summary" | "users";
 
 export function DashboardShell({
   active,
@@ -62,9 +62,9 @@ export function DashboardShell({
             >
               <span aria-hidden="true">⑂</span>Atribución
             </Link>
-            <span className="dashboard-nav-disabled">
-              <span aria-hidden="true">⌁</span>Eventos <small>Próximamente</small>
-            </span>
+            <Link className={active === "users" ? "active" : undefined} href="/dashboard/users">
+              <span aria-hidden="true">⌁</span>Usuarios
+            </Link>
             <span className="dashboard-nav-disabled">
               <span aria-hidden="true">⇄</span>Postbacks <small>Próximamente</small>
             </span>

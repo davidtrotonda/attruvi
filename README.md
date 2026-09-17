@@ -11,7 +11,8 @@ El objetivo es conectar campañas publicitarias con instalaciones, compras, ingr
 ## Alcance inicial
 
 - SDK para React Native en iOS y Android.
-- Atribución de instalaciones y eventos de compra.
+- Atribución de instalaciones y actividad posterior: sesiones, registro, compras, suscripciones, reembolsos y LTV observado.
+- Explorador anonimizado de usuarios con el recorrido clic → instalación → sesiones → ingresos → postbacks.
 - Medición de ingresos, ROAS, LTV y retención.
 - Postbacks server-side para Google Ads, Meta Ads y TikTok Ads.
 - Despliegue propio y trazabilidad completa de los datos.

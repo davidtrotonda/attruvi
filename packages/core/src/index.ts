@@ -67,6 +67,9 @@ export const reservedEventNames = [
   "subscription_started",
   "subscription_renewed",
   "subscription_cancelled",
+  "subscription_expired",
+  "subscription_refunded",
+  "refund",
   "uninstall_inferred",
 ] as const;
 
@@ -79,10 +82,21 @@ const basePropertiesSchema = z
   })
   .strict();
 
+const productSchema = z
+  .object({
+    productId: z.string().min(1).max(255),
+    quantity: z.number().int().positive().max(1_000).default(1),
+    valueMinor: bigintInputSchema.optional(),
+  })
+  .strict();
+
 const revenuePropertiesSchema = basePropertiesSchema.extend({
   transactionId: z.string().min(1).max(255),
   valueMinor: bigintInputSchema,
   currency: currencySchema,
+  orderId: z.string().min(1).max(255).optional(),
+  quantity: z.number().int().positive().max(1_000).default(1),
+  products: z.array(productSchema).max(100).default([]),
 });
 
 const subscriptionPropertiesSchema = revenuePropertiesSchema.extend({
@@ -103,6 +117,27 @@ export const eventPropertiesSchema = z.discriminatedUnion("name", [
     properties: basePropertiesSchema.extend({
       productId: z.string().min(1).max(255),
       subscriptionId: z.string().min(1).max(255),
+    }),
+  }),
+  z.object({
+    name: z.literal("subscription_expired"),
+    properties: basePropertiesSchema.extend({
+      productId: z.string().min(1).max(255),
+      subscriptionId: z.string().min(1).max(255),
+    }),
+  }),
+  z.object({
+    name: z.literal("refund"),
+    properties: revenuePropertiesSchema.extend({
+      originalTransactionId: z.string().min(1).max(255),
+      valueMinor: bigintInputSchema.refine((value) => value < 0n, "Un reembolso debe ser negativo"),
+    }),
+  }),
+  z.object({
+    name: z.literal("subscription_refunded"),
+    properties: subscriptionPropertiesSchema.extend({
+      originalTransactionId: z.string().min(1).max(255),
+      valueMinor: bigintInputSchema.refine((value) => value < 0n, "Un reembolso debe ser negativo"),
     }),
   }),
   z.object({
@@ -195,7 +230,14 @@ export const sdkEventEnvelopeSchema = z
   })
   .strict()
   .superRefine((event, context) => {
-    if (event.name === "purchase" || event.name === "subscription_started" || event.name === "subscription_renewed") {
+    const revenueEvents = new Set([
+      "purchase",
+      "refund",
+      "subscription_started",
+      "subscription_renewed",
+      "subscription_refunded",
+    ]);
+    if (revenueEvents.has(event.name)) {
       if (typeof event.properties.transactionId !== "string" || event.properties.transactionId.length === 0) {
         context.addIssue({ code: "custom", path: ["properties", "transactionId"], message: "transactionId es obligatorio" });
       }
@@ -208,20 +250,31 @@ export const sdkEventEnvelopeSchema = z
       if (typeof event.properties.currency !== "string" || !/^[A-Z]{3}$/.test(event.properties.currency)) {
         context.addIssue({ code: "custom", path: ["properties", "currency"], message: "currency debe ser ISO 4217" });
       }
+      if (
+        (event.name === "refund" || event.name === "subscription_refunded") &&
+        Number(event.properties.valueMinor) >= 0
+      ) {
+        context.addIssue({ code: "custom", path: ["properties", "valueMinor"], message: "un reembolso debe ser negativo" });
+      }
+      const quantity = event.properties.quantity;
+      if (quantity !== undefined && (!Number.isSafeInteger(quantity) || Number(quantity) < 1 || Number(quantity) > 1_000)) {
+        context.addIssue({ code: "custom", path: ["properties", "quantity"], message: "quantity debe estar entre 1 y 1000" });
+      }
+      const products = event.properties.products;
+      if (products !== undefined && !Array.isArray(products)) {
+        context.addIssue({ code: "custom", path: ["properties", "products"], message: "products debe ser una lista" });
+      }
     }
-    if (event.name.startsWith("subscription_") && event.name !== "subscription_cancelled") {
+    if (event.name.startsWith("subscription_")) {
       for (const property of ["productId", "subscriptionId"] as const) {
         if (typeof event.properties[property] !== "string" || event.properties[property].length === 0) {
           context.addIssue({ code: "custom", path: ["properties", property], message: `${property} es obligatorio` });
         }
       }
     }
-    if (event.name === "subscription_cancelled") {
-      for (const property of ["productId", "subscriptionId"] as const) {
-        if (typeof event.properties[property] !== "string" || event.properties[property].length === 0) {
-          context.addIssue({ code: "custom", path: ["properties", property], message: `${property} es obligatorio` });
-        }
-      }
+    if ((event.name === "refund" || event.name === "subscription_refunded") &&
+      (typeof event.properties.originalTransactionId !== "string" || event.properties.originalTransactionId.length === 0)) {
+      context.addIssue({ code: "custom", path: ["properties", "originalTransactionId"], message: "originalTransactionId es obligatorio" });
     }
   });
 

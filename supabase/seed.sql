@@ -378,7 +378,14 @@ select
   ('b3000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
   'demo-purchase-' || n, 'purchase',
   '2026-09-10T09:20:00Z'::timestamptz + make_interval(hours => n),
-  jsonb_build_object('transaction_id', 'demo-transaction-' || n),
+  jsonb_build_object(
+    'transactionId', 'demo-transaction-' || n,
+    'orderId', 'demo-order-' || n,
+    'valueMinor', case n when 1 then 4990 when 2 then 2990 else 9990 end,
+    'currency', 'EUR',
+    'quantity', 1,
+    'products', jsonb_build_array(jsonb_build_object('productId', 'demo-premium', 'quantity', 1))
+  ),
   case n when 1 then 4990 when 2 then 2990 else 9990 end,
   'EUR'
 from generate_series(1, 3) as series(n)
@@ -401,6 +408,18 @@ select
   '2026-09-10T09:20:00Z'::timestamptz + make_interval(hours => n)
 from generate_series(1, 3) as series(n)
 on conflict (id) do nothing;
+
+do $$
+declare installation_id uuid;
+begin
+  for installation_id in
+    select id from public.installations
+    where app_id = '20000000-0000-4000-8000-000000000001'
+  loop
+    perform private.process_installation_activity(installation_id);
+  end loop;
+end;
+$$;
 
 insert into public.ad_costs (
   id, organization_id, app_id, source_id, campaign_id, ad_group_id, ad_id,

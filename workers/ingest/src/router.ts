@@ -209,6 +209,9 @@ export function createIngestHandler(runtime: IngestRuntime) {
       const parsed = sdkEventBatchSchema.safeParse(raw);
       if (!parsed.success) return reject(runtime, requestId, "invalid_events_payload", 400, { appId: configuration.appId });
       eventBody = parsed.data;
+      if (eventBody.events.some((event) => event.name === "uninstall_inferred")) {
+        return reject(runtime, requestId, "uninstall_requires_server_evidence", 400, { appId: configuration.appId });
+      }
     } else {
       const parsed = sdkIdentifySchema.safeParse(raw);
       if (!parsed.success) return reject(runtime, requestId, "invalid_identify_payload", 400, { appId: configuration.appId });

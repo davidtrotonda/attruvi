@@ -11,6 +11,7 @@ type AppDraft = {
   iosBundleId: string | null;
   name: string;
   platform: "android" | "both" | "ios";
+  sessionTimeoutMinutes: number;
   status: "active" | "disabled" | "paused";
   timezone: string;
 };
@@ -60,7 +61,8 @@ export function AppForm({ app }: { app?: AppDraft }) {
         ) : <input name="android_package_name" type="hidden" value="" />}
         <label><span>Moneda</span><select defaultValue={app?.currency ?? "EUR"} name="currency"><option value="EUR">EUR — Euro</option><option value="USD">USD — Dólar</option><option value="GBP">GBP — Libra</option><option value="MXN">MXN — Peso mexicano</option><option value="ARS">ARS — Peso argentino</option><option value="CLP">CLP — Peso chileno</option><option value="COP">COP — Peso colombiano</option></select></label>
         <label><span>Zona horaria</span><select defaultValue={app?.timezone ?? "Europe/Madrid"} name="timezone">{timezones.map((timezone) => <option key={timezone} value={timezone}>{timezone}</option>)}</select></label>
-        <label className="field-span-two"><span>Estado</span><select defaultValue={app?.status ?? "active"} name="status"><option value="active">Activa</option><option value="paused">Pausada</option><option value="disabled">Desactivada</option></select></label>
+        <label><span>Nueva sesión tras</span><select defaultValue={app?.sessionTimeoutMinutes ?? 30} name="session_timeout_minutes"><option value="15">15 min sin actividad</option><option value="30">30 min sin actividad</option><option value="45">45 min sin actividad</option><option value="60">60 min sin actividad</option></select></label>
+        <label><span>Estado</span><select defaultValue={app?.status ?? "active"} name="status"><option value="active">Activa</option><option value="paused">Pausada</option><option value="disabled">Desactivada</option></select></label>
       </div>
 
       {state.message ? <p className={state.success ? "form-result form-result-success" : "form-result form-result-error"} role="status">{state.message}</p> : null}

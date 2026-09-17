@@ -29,6 +29,13 @@ Actualizado: 2026-09-17.
 - Motor de atribución versionado con prioridad de evidencia, adquisición/reactivación separadas, last non-organic click, fallback orgánico, candidatos puntuados, explicación, snapshots históricos y corrección manual auditada.
 - Comparación `dry-run` para versiones nuevas, coincidencia probabilística cerrada por defecto y limitada a consentimiento, base legal, dos hashes salados y ventana corta.
 - Sección `/dashboard/attribution` con regla activa, confianza, motivo ganador y candidatos evaluados por instalación o sesión.
+- Procesamiento fiable de `install`, aperturas, sesiones, registro, compras, reembolsos y todo el ciclo de suscripción mediante `ingest_sdk_messages_v3`.
+- Perfiles anónimos con unión explícita tras `identify`, reinstalaciones del mismo usuario, conflicto cerrado entre identidades distintas y borrado de identificadores sin romper el historial contable.
+- Sesiones reconstruibles con 30 minutos de inactividad por defecto y selector configurable por app; los eventos atrasados no dependen del orden de Queue.
+- Libro mayor idempotente con revenue declarado/verificado separado, monedas independientes, reembolsos negativos e interfaz futura para App Store, Google Play y RevenueCat.
+- Métricas por instalación y usuario: sesiones, actividad, registro, primera compra, payer status, días desde instalación e LTV observado.
+- `uninstall_inferred` restringido a invalidaciones push persistentes del backend, con fecha, evidencia minimizada y confianza; el SDK no puede declararlo.
+- Explorador `/dashboard/users` paginado y filtrado en servidor, con línea temporal clic → instalación → sesiones → ingresos → postbacks y sin PII.
 - OpenAPI, ejemplos ficticios, entorno local con Miniflare, adaptador en memoria exclusivo de pruebas y prueba de carga medida.
 - Todas las migraciones aplicadas al proyecto Supabase Attruvi. Las 52 claves externas cuentan con índice de cobertura y la función técnica de auto-RLS no es ejecutable por `anon` ni `authenticated`.
 
@@ -39,13 +46,13 @@ Actualizado: 2026-09-17.
 - `npm run test:web`: registro, verificación, contraseña incorrecta, recuperación, Google OAuth simulado, callback seguro y clasificación de rutas privadas.
 - `npm run test:db`: aislamiento RLS e invariantes en Postgres local; necesita `supabase start` y Docker.
 
-En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 14 pruebas web, 36 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El Worker de ingestión aporta 10 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada y nunca encola IP o agente en claro. El build incluye `/dashboard/apps`, `/dashboard/links` y `/dashboard/attribution`; el Worker de enlaces mantiene sus 13 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas.
+En esta ejecución pasó `npm run verify`: lint, typecheck de raíz y cinco workspaces, 14 pruebas web, 39 pruebas de workspaces, contrato estructural SQL y builds de producción de Next.js, los paquetes y ambos Workers. El Worker de ingestión aporta 11 pruebas, incluida la garantía de que la señal probabilística solo se añade habilitada, nunca encola IP/agente en claro y rechaza una desinstalación enviada por el SDK. El build incluye `/dashboard/apps`, `/dashboard/links`, `/dashboard/attribution` y `/dashboard/users`; el Worker de enlaces mantiene sus 13 pruebas de redirects, Unicode, Install Referrer, destinos, bots, deduplicación, abuso y asociaciones nativas.
 
-Las suites pgTAP tienen 45 assertions. Aunque `npm run test:db` local requiere Docker/Podman, las 24 assertions de esquema anteriores y las 21 del motor pasaron contra el proyecto Supabase Attruvi dentro de transacciones revertidas. Cubren clic directo, Install Referrer, dos clics competidores, clic expirado, corrección manual auditada, primer open duplicado, reinstalación, reactivación, falta de consentimiento, iOS sin señal determinista, probabilística desactivada, `dry-run`, snapshots y explicación del dashboard.
+Las suites pgTAP tienen 68 assertions. Aunque `npm run test:db` local no estuvo disponible porque la instancia local de Supabase no pudo inspeccionarse, las 24 assertions de esquema, 21 del motor de atribución y 23 de actividad pasaron contra el proyecto Supabase Attruvi dentro de transacciones revertidas. Además de la atribución, cubren RLS entre organizaciones, sesión configurable, eventos fuera de orden, unión/conflicto de identidad, compra duplicada, reembolso, renovación, varias monedas, reinstalación, borrado, snapshot histórico e inferencia push persistente.
 
 La prueba de carga local más reciente aceptó 5.000/5.000 solicitudes con concurrencia 100 en 1.025 ms: 4.878,05 solicitudes/s, p50 13 ms y p95 27 ms. Mide validación, controles y cola en memoria; no se presenta como rendimiento de red de Cloudflare o Supabase.
 
-Los asesores remotos de Supabase ya no reportan funciones técnicas públicas ni claves externas sin índice. Permanecen ocho advertencias esperadas por RPC autenticadas `SECURITY DEFINER`, incluidas recalculación y corrección administrativa, justificadas en `DECISIONS.md`; también 81 índices aún “sin uso” porque la base está recién creada y el ajuste externo del pool de Auth.
+Los asesores remotos de Supabase no reportan claves externas sin índice ni nuevas alertas RLS. Permanecen ocho advertencias esperadas por RPC autenticadas `SECURITY DEFINER`, incluidas recalculación y corrección administrativa, justificadas en `DECISIONS.md`; también índices aún “sin uso” porque la base está recién creada y el ajuste externo del pool de Auth.
 
 La fase del SDK superó TypeScript estricto con los tipos de React Native 0.87, 9 pruebas unitarias y `npm pack`. El tarball generado se instaló en una app limpia RN 0.87 con `newArchEnabled=true`; el autolinking detectó Android e iOS. La compilación Android no pudo ejecutarse porque este equipo no tiene JDK ni Android SDK, y la compilación iOS requiere macOS/Xcode.
 
@@ -54,6 +61,7 @@ La fase del SDK superó TypeScript estricto con los tipos de React Native 0.87, 
 - Credenciales y APIs de Google Ads, Meta Ads y TikTok Ads.
 - Agregación de métricas y conectores/postbacks de las redes en producción.
 - Verificadores oficiales de App Attest y Play Integrity; el contrato está preparado pero no se marca ningún token como verificado todavía.
+- Credenciales y conectores de validación de recibos para App Store, Google Play o RevenueCat; hasta entonces los ingresos se muestran como declarados, no verificados.
 
 Nada de lo anterior se presenta como funcional hasta que se implemente y verifique en su fase correspondiente.
 

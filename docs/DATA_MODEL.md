@@ -10,8 +10,9 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 | Apps | `apps`, `app_platforms`, `public_sdk_keys` | Configuración, identificadores iOS/Android y claves públicas hasheadas/revocables |
 | Jerarquía publicitaria | `sources`, `campaigns`, `ad_groups`, `ads` | Fuente → campaña → grupo → anuncio con claves externas y consistencia de tenant |
 | Enlaces | `smart_links`, `link_destinations`, `link_clicks` | Configuración, destinos y clics idempotentes |
-| Identidad y atribución | `installations`, `identities`, `attribution_rule_sets`, `attribution_candidates`, `attributions` | Instalaciones anónimas, reglas configurables, candidatos explicables y decisiones versionadas |
-| Actividad e ingresos | `events`, `sessions`, `purchases`, `subscriptions` | Recorrido posterior, dinero exacto y estados de suscripción |
+| Identidad y atribución | `installations`, `identities`, `app_users`, `app_user_installations`, `attribution_rule_sets`, `attribution_candidates`, `attributions` | Instalaciones anónimas, unión segura tras `identify`, reglas y decisiones versionadas |
+| Actividad e ingresos | `events`, `sessions`, `activity_sessions`, `revenue_ledger`, `revenue_validations`, `subscription_events`, `subscriptions` | Log de transporte, sesiones reconstruibles, contabilidad exacta y estado de suscripción |
+| Calidad de usuario | `installation_activity_metrics`, `app_user_metrics`, `push_token_invalidations`, `uninstall_inferences` | Sesiones, actividad, registro, LTV por moneda e inferencias basadas en señales reales |
 | Costes | `connector_accounts`, `connector_sync_runs`, `ad_costs` | Configuración sin secretos en claro, sincronizaciones y gasto diario |
 | Postbacks | `postback_destinations`, `postback_jobs`, `postback_attempts` | Mapeo y outbox reclamable de forma concurrente |
 | Lectura y control | `daily_metrics`, `audit_log` | Agregados de dashboard y trazabilidad administrativa |
@@ -22,13 +23,15 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 - Las claves foráneas compuestas impiden unir filas de distintas organizaciones o apps.
 - La jerarquía publicitaria estricta usa FKs compuestas. Las tablas con dimensiones opcionales tienen un trigger que valida tenant y coherencia entre niveles.
 - Importes e ingresos son `bigint` en unidades menores y llevan moneda ISO; las ratios se calcularán al consultar, no se almacenan como flotantes.
-- `events` tiene unicidad por `event_id` e `idempotency_key`; compras, costes, métricas y postbacks tienen sus propias claves idempotentes.
+- `events` tiene unicidad por `event_id` e `idempotency_key`; `revenue_ledger` añade `(app_id, transaction_id, event_type)` y mantiene reembolsos negativos separados.
 - `link_clicks` deduplica entregas por `(app_id, dedupe_key)`, distingue bots/pruebas y conserva parámetros de referrer sin guardar la IP ni el agente en claro.
 - Los slugs reservados y destinos no HTTPS se rechazan tanto en la interfaz como mediante constraints.
 - Los datos operativos son de solo lectura para miembros. La escritura de ingestión, rollups y jobs requiere `service_role`.
 - `public_sdk_keys` contiene límites de lote/cuerpo, plataformas, prefijos SDK y política de attestation. La clave se resuelve por SHA-256; el valor legible no se guarda.
 - `installations.installation_access_token_hash` protege la lectura puntual de atribución. `identities.identity_hash` evita conservar el identificador externo legible y `traits` pasa por la allowlist/antipII del Worker.
-- `resolve_ingest_app_key`, `read_sdk_attribution` e `ingest_sdk_messages_v2` son `SECURITY INVOKER`, están revocadas para `public`, `anon` y `authenticated`, y solo se conceden a `service_role`.
+- `resolve_ingest_app_key`, `read_sdk_attribution` e `ingest_sdk_messages_v3` son `SECURITY INVOKER`, están revocadas para `public`, `anon` y `authenticated`, y solo se conceden a `service_role`.
+- `events` copia la atribución vigente y sus nombres históricos al procesarse. `revenue_reported_minor` nunca se presenta como `revenue_verified_minor`; la verificación requiere una respuesta futura de App Store, Google Play o RevenueCat.
+- Las sesiones fiables viven en `activity_sessions` y se reconstruyen en orden de ocurrencia con el umbral configurable de la app. `sessions` conserva el identificador de transporte del SDK.
 - Las atribuciones separan `acquisition` y `reengagement`, usan un `engagement_id` estable y guardan `match_type`, confianza, explicación, ventana en segundos, fecha y versión. Los nombres e IDs externos se copian en la decisión para que un cambio posterior de campaña no reescriba la historia.
 - Una sola regla puede estar activa por app. La coincidencia probabilística nace desactivada y el constraint exige base legal documentada antes de activarla.
 - Todas las claves externas tienen un índice con las columnas de la relación como prefijo. Esto evita búsquedas completas al unir, actualizar o borrar padres cuando crezcan las tablas de eventos.
