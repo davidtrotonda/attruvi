@@ -46,9 +46,11 @@ npm run verify
 npm run security:check
 ```
 
-La arquitectura y el estado real están en `docs/ARCHITECTURE.md` y `docs/BUILD_STATUS.md`.
+Empieza por [`docs/START_HERE.md`](docs/START_HERE.md). La arquitectura y el estado real están en `docs/ARCHITECTURE.md` y `docs/BUILD_STATUS.md`.
 
 La instalación propia está en `docs/SELF_HOSTING.md`. La auditoría redactada y el modelo de amenazas están en `docs/SECURITY_AUDIT.md` y `docs/THREAT_MODEL.md`.
+
+El orden de despliegue, rollback, observabilidad y respuesta a incidentes está en `docs/PRODUCTION_RUNBOOK.md`.
 
 La configuración de Supabase Auth, Google OAuth y sus URLs de retorno está en `docs/AUTH_SETUP.md`.
 
