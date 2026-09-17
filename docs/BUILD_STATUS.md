@@ -11,6 +11,7 @@ Actualizado: 2026-09-17.
 - `/api/health?deep=1` comprueba desde Vercel los dos Workers. Tras rotar y revocar las claves anteriores devolvió HTTP 200 y estado `ok` para web, links e ingest.
 - Supabase producción tiene todas las migraciones aplicadas, RLS activo en todas las tablas públicas y redirect URLs de `www.attruvi.com` configuradas. La rama de staging ejecutó nueve suites pgTAP y el E2E sintético exacto.
 - Google OAuth está activo en Supabase y publicado para usuarios externos. La ficha pública usa `attruvi.com`, sus páginas de privacidad/términos y un correo de soporte; el secreto permanece fuera del repositorio.
+- El onboarding de apps iOS/Android está corregido y verificado en producción: una repetición conserva una app y exactamente una plataforma por sistema operativo.
 - Vercel ejecuta costes a diario, métricas a diario, privacidad a diario y postbacks cada cinco minutos. Cloudflare tiene KV, Queue, DLQ, logs y trazas activos.
 - Escritorio y viewport móvil de 390 px pasan sin overflow ni errores de consola. La landing responde 200, el dominio raíz 308 y `/dashboard` sin sesión 307 hacia el acceso.
 

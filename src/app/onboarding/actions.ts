@@ -72,9 +72,13 @@ export async function submitOnboarding(
   });
 
   if (error) {
+    console.error("[onboarding.complete] Supabase RPC failed", {
+      code: error.code,
+    });
+
     return {
       message:
-        "No se ha podido terminar la configuración. Revisa los datos e inténtalo de nuevo.",
+        "No hemos podido guardar la configuración por un error temporal. Inténtalo de nuevo.",
     };
   }
 

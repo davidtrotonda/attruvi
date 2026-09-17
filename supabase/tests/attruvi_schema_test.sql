@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(24);
+select plan(26);
 
 select has_table('public', 'events', 'events existe en el modelo versionado');
 
@@ -308,6 +308,51 @@ select ok(
       and organization.is_personal
   ),
   'dos accesos conservan una sola organización personal y una membresía owner'
+);
+
+select lives_ok(
+  $$
+    select * from public.complete_personal_onboarding(
+      'Proyecto onboarding',
+      'App onboarding',
+      'both',
+      'com.attruvi.onboardingtest',
+      'com.attruvi.onboarding_test',
+      'EUR',
+      'Europe/Madrid'
+    );
+    select * from public.complete_personal_onboarding(
+      'Proyecto onboarding',
+      'App onboarding',
+      'both',
+      'com.attruvi.onboardingtest',
+      'com.attruvi.onboarding_test',
+      'EUR',
+      'Europe/Madrid'
+    );
+  $$,
+  'el onboarding crea y reintenta una app con ambas plataformas sin ambigüedad'
+);
+
+select ok(
+  (
+    select count(*) = 1
+    from public.apps app
+    join public.organizations organization
+      on organization.id = app.organization_id
+    where organization.created_by = '00000000-0000-4000-8000-000000000202'
+      and organization.is_personal
+  )
+  and (
+    select count(*) = 2
+    from public.app_platforms app_platform
+    join public.apps app on app.id = app_platform.app_id
+    join public.organizations organization
+      on organization.id = app.organization_id
+    where organization.created_by = '00000000-0000-4000-8000-000000000202'
+      and organization.is_personal
+  ),
+  'el onboarding conserva una app y una fila por plataforma tras el reintento'
 );
 
 reset role;

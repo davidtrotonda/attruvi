@@ -17,6 +17,7 @@ Todos los cambios relevantes de Attruvi se documentan aquí.
 
 ### Corregido
 
+- Finalización del onboarding para apps con iOS y Android: el guardado usa la restricción única explícita y admite reintentos sin duplicar la app ni sus plataformas.
 - Compatibilidad de Workers con las nuevas claves secretas de Supabase sin enviarlas como Bearer.
 - Replay reproducible de migraciones cuando el trigger automático de RLS ya existe en producción.
 - Permisos mínimos de `service_role` sobre las funciones privadas de pertenencia.
