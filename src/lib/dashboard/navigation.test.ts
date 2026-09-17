@@ -12,6 +12,7 @@ describe("dashboard navigation", () => {
       "Eventos",
       "Postbacks",
       "Integraciones",
+      "Configurar",
       "Ajustes",
     ]);
   });

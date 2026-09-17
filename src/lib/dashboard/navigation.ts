@@ -7,5 +7,6 @@ export const dashboardNavigation = [
   { href: "/dashboard/events", icon: "◇", label: "Eventos" },
   { href: "/dashboard/postbacks", icon: "⇄", label: "Postbacks" },
   { href: "/dashboard/integrations", icon: "⊞", label: "Integraciones" },
+  { href: "/dashboard/setup", icon: "✦", label: "Configurar" },
   { href: "/dashboard/settings", icon: "⚙", label: "Ajustes" },
 ] as const;

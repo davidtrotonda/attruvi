@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     {!hasData ? <section className="dashboard-onboarding-empty">
       <div><span>TU PANEL ESTÁ LISTO</span><h2>Empieza a medir sin datos inventados.</h2><p>Conecta la app, crea un enlace y registra una instalación. En cuanto lleguen eventos reales, este resumen se completará automáticamente.</p></div>
       <ol><li><strong>1</strong><span>Instala el SDK React Native</span></li><li><strong>2</strong><span>Crea tu primer enlace</span></li><li><strong>3</strong><span>Conecta el gasto publicitario</span></li></ol>
-      <div><Link href={dashboardHref("/dashboard/settings", { app: app.slug, environment: filters.environment, workspace: app.organizationSlug })}>Configurar app</Link><Link href={dashboardHref("/dashboard/links", { app: app.slug, environment: filters.environment, workspace: app.organizationSlug })}>Crear enlace</Link></div>
+      <div><Link href={dashboardHref("/dashboard/setup", { app: app.slug, environment: "development", workspace: app.organizationSlug })}>Instalar con la guía</Link><Link href={dashboardHref("/dashboard/links", { app: app.slug, environment: filters.environment, workspace: app.organizationSlug })}>Crear enlace</Link></div>
     </section> : <>
       <section aria-label="Métricas principales" className="dashboard-metrics dashboard-metrics-nine">
         <MetricCard current={number(current.spend_minor)} label="Gasto" previous={number(previous.spend_minor)} value={formatMoneyMinor(current.spend_minor, app.currency)} />

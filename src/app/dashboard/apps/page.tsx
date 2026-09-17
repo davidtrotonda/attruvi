@@ -34,7 +34,7 @@ export default async function AppsPage({
               {app.androidPackageName ? <div><dt>Package name</dt><dd>{app.androidPackageName}</dd></div> : null}
               <div><dt>Datos</dt><dd>{app.currency} · {app.timezone}</dd></div>
             </dl>
-            <div className="app-card-actions"><Link href={`/dashboard/links?workspace=${encodeURIComponent(organization.slug)}&app=${encodeURIComponent(app.slug)}`}>Ver enlaces</Link>{canConfigure ? <Link href={`/dashboard/apps?workspace=${encodeURIComponent(organization.slug)}&app=${encodeURIComponent(app.slug)}&edit=${app.id}`}>Editar</Link> : null}</div>
+            <div className="app-card-actions"><Link href={`/dashboard/setup?workspace=${encodeURIComponent(organization.slug)}&app=${encodeURIComponent(app.slug)}&environment=development`}>Configurar</Link><Link href={`/dashboard/links?workspace=${encodeURIComponent(organization.slug)}&app=${encodeURIComponent(app.slug)}`}>Ver enlaces</Link>{canConfigure ? <Link href={`/dashboard/apps?workspace=${encodeURIComponent(organization.slug)}&app=${encodeURIComponent(app.slug)}&edit=${app.id}`}>Editar</Link> : null}</div>
           </article>
         ))}
         {apps.length === 0 ? <div className="management-empty"><span aria-hidden="true">▣</span><h2>Aún no hay aplicaciones</h2><p>Añade la primera para empezar a crear enlaces.</p></div> : null}

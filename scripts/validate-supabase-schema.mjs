@@ -69,6 +69,7 @@ const requiredTables = [
   "metric_dirty_days",
   "metric_rollup_runs",
   "metric_reconciliation_runs",
+  "development_debug_events",
   "audit_log",
 ];
 
@@ -134,6 +135,9 @@ assert.match(migration, /installation_access_token_hash bytea/i);
 assert.match(migration, /revoke all on function public\.rls_auto_enable\(\) from public, anon, authenticated/i);
 assert.match(migration, /create index if not exists events_installation_fk_idx/i);
 assert.match(migration, /create index if not exists public_sdk_keys_app_fk_idx/i);
+assert.match(migration, /create or replace function public\.create_public_sdk_key\(/i);
+assert.match(migration, /create or replace function public\.create_development_test_event\(/i);
+assert.match(migration, /development_dry_run/i);
 assert.match(migration, /grant execute on function public\.resolve_smart_link\(text\)[\s\S]*?to service_role/i);
 assert.match(migration, /create unique index link_clicks_app_dedupe_unique/i);
 assert.match(migration, /smart_links_slug_not_reserved/i);
@@ -180,6 +184,8 @@ for (const proof of [
   "reconciliador detecta una desviación",
   "recálculo incremental elimina la desviación",
   "conservan los datos raw",
+  "recorrido demo desde cero",
+  "postback dry-run",
 ]) {
   assert.match(databaseTests, new RegExp(proof, "i"), `falta la prueba: ${proof}`);
 }

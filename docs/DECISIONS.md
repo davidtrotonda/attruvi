@@ -166,3 +166,7 @@ Estado: aceptada. Sin consentimiento `granted` o sin `gclid`/`gbraid`/`wbraid`, 
 ## ADR-040 — Pruebas de proveedor que no contaminan campañas
 
 Estado: aceptada. Google se prueba con `validate_only` y Meta con `test_event_code`. La versión fijada de TikTok Events API 2.0 no ofrece un modo universal que garantice no entregar, por lo que Attruvi limita “Probar” a una lectura de cuenta y validación local del payload. La interfaz explica la diferencia y nunca envía una conversión falsa para simular éxito.
+
+## ADR-041 — Setup real en development y claves de una sola visualización
+
+Estado: aceptada. El asistente deriva el progreso de filas autoritativas y no de casillas manuales. La appKey es pública, pero solo se devuelve completa al crearla; el servidor envía a la RPC su SHA-256 y Postgres conserva hash, prefijo, ámbito y revocación. La rotación es transaccional y auditada. Las dos RPC nuevas usan `SECURITY DEFINER` para efectuar operaciones atómicas que las policies normales no pueden expresar, fijan `search_path`, exigen `auth.uid()`, verifican membresía owner/admin y limitan su `EXECUTE` a `authenticated`/`service_role`. Las pruebas atraviesan ingestión y actividad reales bajo `development`; cualquier outbox resultante nace `skipped` con `development_dry_run`, por lo que nunca puede salir hacia una red. Las trazas del Debugger son temporales, anonimizadas y aisladas por RLS.

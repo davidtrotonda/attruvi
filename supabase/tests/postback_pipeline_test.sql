@@ -38,7 +38,7 @@ insert into public.installations (
 ) values (
   '90000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001',
   '20000000-0000-4000-8000-000000000001',extensions.digest('postback-installation','sha256'),
-  'android','development','2026-09-17T07:00:00Z','2026-09-17T08:00:00Z','granted'
+  'android','production','2026-09-17T07:00:00Z','2026-09-17T08:00:00Z','granted'
 ) on conflict (id) do nothing;
 
 insert into public.app_users (id, organization_id, app_id, first_seen_at, last_seen_at)

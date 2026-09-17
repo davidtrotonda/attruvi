@@ -15,7 +15,7 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 | Calidad de usuario | `installation_activity_metrics`, `app_user_metrics`, `push_token_invalidations`, `uninstall_inferences` | Sesiones, actividad, registro, LTV por moneda e inferencias basadas en señales reales |
 | Costes | `connector_accounts`, `connector_sync_runs`, `ad_costs`, `ad_cost_mappings`, `private.connector_secrets` | Configuración pública minimizada, jobs, gasto diario, asignaciones y tokens cifrados fuera del esquema expuesto |
 | Postbacks | `postback_destinations`, `postback_jobs`, `postback_attempts` | Mapeo y outbox reclamable de forma concurrente |
-| Lectura y control | `daily_metrics`, `metric_dirty_days`, `metric_rollup_runs`, `metric_reconciliation_runs`, `audit_log` | Agregados versionados, cola de recálculo, reconciliación y trazabilidad administrativa |
+| Lectura y control | `daily_metrics`, `metric_dirty_days`, `metric_rollup_runs`, `metric_reconciliation_runs`, `development_debug_events`, `audit_log` | Agregados versionados, cola de recálculo, diagnóstico temporal de development y trazabilidad administrativa |
 
 ## Reglas estructurales
 
@@ -41,6 +41,7 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 - `daily_metrics` conserva numeradores y denominadores por cohorte, nivel, entorno, plataforma y moneda. `query_metric_rollups` deriva los ratios; `raw_hash`, `metric_version` y `data_through_at` permiten reproducir cada fila.
 - `metric_dirty_days` deduplica cambios tardíos por app/entorno/fecha. `metric_rollup_runs` registra rango, versión, frescura, duración y resultado; `metric_reconciliation_runs` conserva conteos y una muestra segura de diferencias.
 - `organization_invitations` conserva correo normalizado, rol, expiración y solo el SHA-256 del token. La aceptación exige que el correo de `auth.users` coincida; toda creación, aceptación o modificación de rol deja una entrada en `audit_log`.
+- `development_debug_events` solo acepta etapas y estados acotados, metadatos operativos sanitizados y referencias opacas. No almacena propiedades de evento ni identificadores personales y su retención objetivo es siete días.
 
 ## RLS
 
