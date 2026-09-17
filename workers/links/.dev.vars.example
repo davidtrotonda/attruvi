@@ -1,3 +1,4 @@
+SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=replace_with_worker_secret
 CLICK_HASH_SALT=replace_with_random_32_byte_value
 LINKS_SYNC_TOKEN=replace_with_shared_cache_purge_token

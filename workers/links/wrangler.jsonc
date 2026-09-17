@@ -5,13 +5,11 @@
   "compatibility_date": "2026-09-16",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "SUPABASE_URL": "https://your-project.supabase.co",
     "SMART_LINK_CACHE_TTL_SECONDS": "300"
   },
   "kv_namespaces": [
     {
-      "binding": "LINKS_KV",
-      "id": "00000000000000000000000000000000"
+      "binding": "LINKS_KV"
     }
   ],
   "queues": {
