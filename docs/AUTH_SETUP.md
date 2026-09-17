@@ -44,6 +44,8 @@ https://www.attruvi.com/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&n
 
 ## Google Auth
 
+Estado de la instancia oficial: activo en producción para usuarios externos. El cliente OAuth, su secreto y el proveedor de Supabase están configurados fuera del repositorio; el flujo público llega al selector oficial de cuentas de Google sin errores de proveedor ni de redirect URI.
+
 En Google Auth Platform crea un cliente OAuth de tipo Web application.
 
 Authorized JavaScript origins:

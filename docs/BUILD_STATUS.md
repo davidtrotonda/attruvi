@@ -10,10 +10,11 @@ Actualizado: 2026-09-17.
 - Staging conservado mediante el alias del proyecto Vercel y los Workers `attruvi-links-staging` / `attruvi-ingest-staging`; los hosts se obtienen del gestor de despliegues, no del código.
 - `/api/health?deep=1` comprueba desde Vercel los dos Workers. Tras rotar y revocar las claves anteriores devolvió HTTP 200 y estado `ok` para web, links e ingest.
 - Supabase producción tiene todas las migraciones aplicadas, RLS activo en todas las tablas públicas y redirect URLs de `www.attruvi.com` configuradas. La rama de staging ejecutó nueve suites pgTAP y el E2E sintético exacto.
+- Google OAuth está activo en Supabase y publicado para usuarios externos. La ficha pública usa `attruvi.com`, sus páginas de privacidad/términos y un correo de soporte; el secreto permanece fuera del repositorio.
 - Vercel ejecuta costes a diario, métricas a diario, privacidad a diario y postbacks cada cinco minutos. Cloudflare tiene KV, Queue, DLQ, logs y trazas activos.
 - Escritorio y viewport móvil de 390 px pasan sin overflow ni errores de consola. La landing responde 200, el dominio raíz 308 y `/dashboard` sin sesión 307 hacia el acceso.
 
-La infraestructura principal está desplegada y es verificable, pero el producto **no se marca aún como listo para integrar en apps reales**: faltan verificadores activos de App Attest/Play Integrity, credenciales y aprobación de las redes, SMTP/Google OAuth de producción, validación nativa iOS y revisión jurídica. El dominio de smart links sigue en `workers.dev` hasta que `attruvi.com` pueda asociarse a una zona de Cloudflare sin cambiar DNS ajeno.
+La infraestructura principal está desplegada y es verificable, pero el producto **no se marca aún como listo para integrar en apps reales**: faltan verificadores activos de App Attest/Play Integrity, credenciales y aprobación de las redes, SMTP de producción, validación nativa iOS y revisión jurídica. El dominio de smart links sigue en `workers.dev` hasta que `attruvi.com` pueda asociarse a una zona de Cloudflare sin cambiar DNS ajeno.
 
 ## Completado
 
@@ -114,7 +115,7 @@ Nada de lo anterior se presenta como funcional hasta que se implemente y verifiq
 
 ## Configuración externa pendiente
 
-- Activar Google Auth con su Client ID/Secret y configurar un SMTP de producción. Las redirect URLs de Attruvi ya están registradas en Supabase.
+- Configurar un SMTP de producción para la verificación y recuperación por correo. Google Auth y las redirect URLs de Attruvi ya están activos en producción.
 - Asociar un dominio estable de Attruvi a los Workers cuando pueda hacerse sin mover ni alterar DNS ajeno; mientras tanto se usan las URLs `workers.dev` verificadas.
 - Añadir las asociaciones reales de cada app a `association-config.ts` y comprobar Universal Links/App Links en dispositivos.
 - Compilar y validar iOS en un host con Xcode; Android RN 0.87/New Architecture y los tres fixtures objetivo ya pasan.

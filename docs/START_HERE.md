@@ -8,12 +8,12 @@ Attruvi te dice de qué anuncio llega una instalación, qué hace después ese u
 - Estado básico: `https://www.attruvi.com/api/health`.
 - Estado de web + Workers: `https://www.attruvi.com/api/health?deep=1`.
 
-La plataforma principal está en producción y los conectores sin credenciales quedan desactivados. Antes de instalarla en usuarios reales siguen siendo obligatorios App Attest/Play Integrity, la validación iOS en dispositivo, SMTP/Google OAuth y la revisión legal indicada en `BUILD_STATUS.md`.
+La plataforma principal y el acceso con Google están en producción; los conectores publicitarios sin credenciales quedan desactivados. Antes de instalarla en usuarios reales siguen siendo obligatorios App Attest/Play Integrity, la validación iOS en dispositivo, SMTP y la revisión legal indicada en `BUILD_STATUS.md`.
 
 ## Si solo quieres probarlo
 
 1. Entra en `https://www.attruvi.com`.
-2. Crea una cuenta o usa Google si el proveedor está activado.
+2. Crea una cuenta con correo o usa el acceso activo de Google.
 3. Crea tu primera app React Native en el onboarding.
 4. Abre **Configurar** y genera una appKey de development.
 5. Sigue “Hazlo con IA” para instalar `@attruvi/react-native`.
@@ -56,7 +56,7 @@ Carga secretos únicamente en Vercel, Supabase y Cloudflare. `supabase/seed.sql`
 
 Google Ads, Meta Ads y TikTok Ads aparecen como **Pendiente de credenciales** hasta recibir sus Client IDs/Secrets y, cuando corresponda, developer token, IDs de conversión/dataset/event source y aprobación del proveedor.
 
-Para acceso Google también falta el Client ID/Secret de Google en Supabase. El acceso manual está implementado, pero el correo transaccional de producción necesita SMTP propio para entregar verificación y recuperación con fiabilidad.
+El acceso con Google está activado para usuarios externos y usa OAuth PKCE mediante Supabase. El acceso manual también está implementado, pero el correo transaccional de producción necesita SMTP propio para entregar verificación y recuperación con fiabilidad.
 
 ## Límites que debes conocer
 

@@ -13,6 +13,7 @@ Todos los cambios relevantes de Attruvi se documentan aquí.
 - Configuración explícita de staging para Supabase, Vercel y ambos Workers.
 - Job de postbacks en Vercel cada cinco minutos.
 - Despliegue verificado de web, Supabase, Workers, KV, Queue y DLQ en los recursos existentes.
+- Acceso con Google OAuth publicado para usuarios externos, conectado a Supabase y verificado desde la landing hasta el selector oficial de cuentas.
 
 ### Corregido
 

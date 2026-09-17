@@ -8,7 +8,7 @@ El objetivo es conectar campañas publicitarias con instalaciones, compras, ingr
 
 Las aplicaciones usadas durante la validación del SDK son únicamente pruebas de compatibilidad aisladas. No forman parte de Attruvi ni aparecen en cuentas nuevas: cada cliente registra sus propias aplicaciones y envía sus eventos mediante el SDK.
 
-> Estado: web, Supabase y Workers desplegados y verificables en producción. El producto todavía **no está listo para integrar en apps reales**: faltan credenciales/aprobaciones de redes, verificadores activos de App Attest/Play Integrity, validación iOS en dispositivo, SMTP/Google OAuth y revisión jurídica.
+> Estado: web, Supabase, Google OAuth y Workers desplegados y verificables en producción. El producto todavía **no está listo para integrar en apps reales**: faltan credenciales/aprobaciones de redes, verificadores activos de App Attest/Play Integrity, validación iOS en dispositivo, SMTP y revisión jurídica.
 
 ## Alcance inicial
 
