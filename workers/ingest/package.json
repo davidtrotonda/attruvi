@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "wrangler deploy --dry-run --outdir dist",
+    "dev": "wrangler dev --local --persist-to .wrangler/state",
+    "load:test": "vitest run --config vitest.load.config.ts --reporter=verbose",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "types": "wrangler types --include-runtime false"
+    "types": "wrangler types --include-runtime false --env-file .dev.vars.example"
   },
   "dependencies": {
     "@attruvi/core": "0.1.0"

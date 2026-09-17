@@ -26,12 +26,16 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 - `link_clicks` deduplica entregas por `(app_id, dedupe_key)`, distingue bots/pruebas y conserva parámetros de referrer sin guardar la IP ni el agente en claro.
 - Los slugs reservados y destinos no HTTPS se rechazan tanto en la interfaz como mediante constraints.
 - Los datos operativos son de solo lectura para miembros. La escritura de ingestión, rollups y jobs requiere `service_role`.
+- `public_sdk_keys` contiene límites de lote/cuerpo, plataformas, prefijos SDK y política de attestation. La clave se resuelve por SHA-256; el valor legible no se guarda.
+- `installations.installation_access_token_hash` protege la lectura puntual de atribución. `identities.identity_hash` evita conservar el identificador externo legible y `traits` pasa por la allowlist/antipII del Worker.
+- `resolve_ingest_app_key`, `read_sdk_attribution` e `ingest_sdk_messages` son `SECURITY INVOKER`, están revocadas para `public`, `anon` y `authenticated`, y solo se conceden a `service_role`.
+- Todas las claves externas tienen un índice con las columnas de la relación como prefijo. Esto evita búsquedas completas al unir, actualizar o borrar padres cuando crezcan las tablas de eventos.
 
 ## RLS
 
 Todas las tablas públicas tienen RLS activado. `anon` no recibe privilegios. Un usuario autenticado puede leer una fila solo cuando `private.is_organization_member(organization_id)` valida su membresía. `owner` y `admin` pueden mutar tablas de configuración; `viewer` no.
 
-Las dos funciones `SECURITY DEFINER` de `private` son helpers internos para evitar recursión sobre `organization_members`. Las RPC públicas de onboarding y gestión de apps/enlaces requieren privilegios elevados para escribir varias tablas en una sola transacción. Todas comprueban `auth.uid()`, fijan `search_path = ''`, revocan acceso a `public` y `anon`, y nunca aceptan un identificador de organización enviado por el cliente. `resolve_smart_link` devuelve solo el contrato público necesario para redirigir y solo puede ejecutarla `service_role`. La reclamación de postbacks es `SECURITY INVOKER` y también queda restringida al servicio.
+Las dos funciones `SECURITY DEFINER` de `private` son helpers internos para evitar recursión sobre `organization_members`. Las seis RPC públicas de onboarding y gestión de apps/enlaces requieren privilegios elevados para escribir varias tablas en una sola transacción. Todas comprueban `auth.uid()`, fijan `search_path = ''`, revocan acceso a `public` y `anon`, y nunca aceptan un identificador de organización enviado por el cliente. Este uso deliberado queda documentado aunque el asesor de Supabase lo muestre como advertencia genérica. `resolve_smart_link` y las RPC de ingestión solo pueden ejecutarlas `service_role`. La función técnica `rls_auto_enable` tampoco es ejecutable por `anon` ni `authenticated`. La reclamación de postbacks es `SECURITY INVOKER` y también queda restringida al servicio.
 
 ## Particionado y retención
 

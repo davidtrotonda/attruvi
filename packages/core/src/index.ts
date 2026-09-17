@@ -133,11 +133,23 @@ export const eventBatchSchema = z
   })
   .strict();
 
-const sdkJsonPrimitiveSchema = z.union([z.string(), z.number().finite(), z.boolean(), z.null()]);
+const sdkJsonPrimitiveSchema = z.union([
+  z.string().max(2_048),
+  z.number().finite(),
+  z.boolean(),
+  z.null(),
+]);
 type SdkJsonValue = z.infer<typeof sdkJsonPrimitiveSchema> | SdkJsonValue[] | { [key: string]: SdkJsonValue };
 const sdkJsonValueSchema: z.ZodType<SdkJsonValue> = z.lazy(() =>
-  z.union([sdkJsonPrimitiveSchema, z.array(sdkJsonValueSchema), z.record(z.string(), sdkJsonValueSchema)]),
+  z.union([
+    sdkJsonPrimitiveSchema,
+    z.array(sdkJsonValueSchema).max(50),
+    z.record(z.string().min(1).max(80), sdkJsonValueSchema),
+  ]),
 );
+
+export const sdkEnvironmentSchema = z.enum(["development", "staging", "production"]);
+export const sdkPlatformSchema = z.enum(["ios", "android"]);
 
 export const sdkAttributionSchema = z
   .object({
@@ -172,14 +184,44 @@ export const sdkEventEnvelopeSchema = z
     idempotencyKey: z.string().min(8).max(255),
     properties: z.record(z.string(), sdkJsonValueSchema),
   })
-  .strict();
+  .strict()
+  .superRefine((event, context) => {
+    if (event.name === "purchase" || event.name === "subscription_started" || event.name === "subscription_renewed") {
+      if (typeof event.properties.transactionId !== "string" || event.properties.transactionId.length === 0) {
+        context.addIssue({ code: "custom", path: ["properties", "transactionId"], message: "transactionId es obligatorio" });
+      }
+      if (
+        (typeof event.properties.valueMinor !== "string" || !/^-?\d+$/.test(event.properties.valueMinor)) &&
+        (typeof event.properties.valueMinor !== "number" || !Number.isSafeInteger(event.properties.valueMinor))
+      ) {
+        context.addIssue({ code: "custom", path: ["properties", "valueMinor"], message: "valueMinor debe ser un entero" });
+      }
+      if (typeof event.properties.currency !== "string" || !/^[A-Z]{3}$/.test(event.properties.currency)) {
+        context.addIssue({ code: "custom", path: ["properties", "currency"], message: "currency debe ser ISO 4217" });
+      }
+    }
+    if (event.name.startsWith("subscription_") && event.name !== "subscription_cancelled") {
+      for (const property of ["productId", "subscriptionId"] as const) {
+        if (typeof event.properties[property] !== "string" || event.properties[property].length === 0) {
+          context.addIssue({ code: "custom", path: ["properties", property], message: `${property} es obligatorio` });
+        }
+      }
+    }
+    if (event.name === "subscription_cancelled") {
+      for (const property of ["productId", "subscriptionId"] as const) {
+        if (typeof event.properties[property] !== "string" || event.properties[property].length === 0) {
+          context.addIssue({ code: "custom", path: ["properties", property], message: `${property} es obligatorio` });
+        }
+      }
+    }
+  });
 
 export const sdkEventBatchSchema = z
   .object({
     batchId: z.uuid(),
     sentAt: utcDateTimeSchema,
-    environment: z.enum(["development", "staging", "production"]),
-    platform: z.enum(["ios", "android"]),
+    environment: sdkEnvironmentSchema,
+    platform: sdkPlatformSchema,
     sdkVersion: z.string().min(1).max(64),
     identity: z
       .object({
@@ -191,6 +233,38 @@ export const sdkEventBatchSchema = z
     attribution: sdkAttributionSchema.optional(),
     events: z.array(sdkEventEnvelopeSchema).min(1).max(100),
   })
+  .strict()
+  .superRefine((batch, context) => {
+    const installationIds = new Set(batch.events.map((event) => event.installationId));
+    if (installationIds.size !== 1) {
+      context.addIssue({ code: "custom", path: ["events"], message: "un lote solo puede pertenecer a una instalación" });
+    }
+  });
+
+const sdkClientContextSchema = z
+  .object({
+    installationId: installationIdSchema,
+    anonymousId: z.uuid(),
+    occurredAt: utcDateTimeSchema,
+    environment: sdkEnvironmentSchema,
+    platform: sdkPlatformSchema,
+    sdkVersion: z.string().min(1).max(64),
+    appVersion: z.string().min(1).max(64).optional(),
+  })
+  .strict();
+
+export const sdkInstallationSchema = sdkClientContextSchema.extend({
+  consent: z.enum(["granted", "limited"]),
+  attribution: sdkAttributionSchema.optional(),
+});
+
+export const sdkIdentifySchema = sdkClientContextSchema.extend({
+  userId: z.string().min(1).max(255),
+  traits: z.record(z.string().min(1).max(80), sdkJsonValueSchema).default({}),
+});
+
+export const sdkAttributionQuerySchema = z
+  .object({ installationId: installationIdSchema })
   .strict();
 
 export const attributionSchema = z
@@ -226,6 +300,8 @@ export type EventEnvelope = z.output<typeof eventEnvelopeSchema>;
 export type EventBatch = z.output<typeof eventBatchSchema>;
 export type SdkEventEnvelope = z.output<typeof sdkEventEnvelopeSchema>;
 export type SdkEventBatch = z.output<typeof sdkEventBatchSchema>;
+export type SdkInstallation = z.output<typeof sdkInstallationSchema>;
+export type SdkIdentify = z.output<typeof sdkIdentifySchema>;
 export type Attribution = z.output<typeof attributionSchema>;
 export type Postback = z.output<typeof postbackSchema>;
 

@@ -75,6 +75,14 @@ assert.match(migration, /organizations_one_personal_workspace_per_creator/i);
 assert.match(migration, /create or replace function public\.upsert_personal_app\(payload jsonb\)/i);
 assert.match(migration, /create or replace function public\.upsert_personal_smart_link\(payload jsonb\)/i);
 assert.match(migration, /create or replace function public\.resolve_smart_link\(requested_slug text\)/i);
+assert.match(migration, /create or replace function public\.resolve_ingest_app_key\(provided_key_hash text\)/i);
+assert.match(migration, /create or replace function public\.ingest_sdk_messages\(payload jsonb\)/i);
+assert.match(migration, /create or replace function public\.read_sdk_attribution\(/i);
+assert.match(migration, /grant execute on function public\.ingest_sdk_messages\(jsonb\) to service_role/i);
+assert.match(migration, /installation_access_token_hash bytea/i);
+assert.match(migration, /revoke all on function public\.rls_auto_enable\(\) from public, anon, authenticated/i);
+assert.match(migration, /create index if not exists events_installation_fk_idx/i);
+assert.match(migration, /create index if not exists public_sdk_keys_app_fk_idx/i);
 assert.match(migration, /grant execute on function public\.resolve_smart_link\(text\)[\s\S]*?to service_role/i);
 assert.match(migration, /create unique index link_clicks_app_dedupe_unique/i);
 assert.match(migration, /smart_links_slug_not_reserved/i);
@@ -97,6 +105,7 @@ for (const proof of [
   "jerarquía campaña, grupo y anuncio",
   "mantienen precisión",
   "dashboard útil",
+  "ingestión idempotente",
 ]) {
   assert.match(databaseTests, new RegExp(proof, "i"), `falta la prueba: ${proof}`);
 }

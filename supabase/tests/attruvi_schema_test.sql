@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(16);
+select plan(24);
 
 select has_table('public', 'events', 'events existe en el modelo versionado');
 
@@ -12,6 +12,71 @@ select has_function(
 select has_function(
   'public', 'upsert_personal_smart_link', array['jsonb'],
   'el constructor de enlaces usa una operación atómica'
+);
+
+select has_function(
+  'public', 'resolve_ingest_app_key', array['text'],
+  'la appKey pública se resuelve solo desde el servicio'
+);
+
+select has_function(
+  'public', 'ingest_sdk_messages', array['jsonb'],
+  'la Queue persiste un lote con una sola operación'
+);
+
+select has_function(
+  'public', 'read_sdk_attribution', array['uuid', 'uuid', 'text'],
+  'la lectura de atribución exige una prueba de instalación'
+);
+
+select is(
+  public.resolve_ingest_app_key(
+    encode(extensions.digest('attruvi_demo_public_key_only', 'sha256'), 'hex')
+  ) ->> 'appId',
+  '20000000-0000-4000-8000-000000000001',
+  'la clave demo resuelve la app y entorno correctos'
+);
+
+update public.installations
+set installation_access_token_hash = extensions.digest('demo-installation-proof', 'sha256')
+where id = '90000000-0000-4000-8000-000000000001';
+
+select is(
+  public.read_sdk_attribution(
+    '20000000-0000-4000-8000-000000000001',
+    '90000000-0000-4000-8000-000000000001',
+    encode(extensions.digest('wrong-proof', 'sha256'), 'hex')
+  ),
+  null::jsonb,
+  'la appKey sin prueba correcta no puede leer atribución'
+);
+
+select is(
+  public.read_sdk_attribution(
+    '20000000-0000-4000-8000-000000000001',
+    '90000000-0000-4000-8000-000000000001',
+    encode(extensions.digest('demo-installation-proof', 'sha256'), 'hex')
+  ) ->> 'source',
+  'Google Ads',
+  'la prueba correcta devuelve solo la atribución filtrada'
+);
+
+select lives_ok(
+  $$
+    select public.ingest_sdk_messages($json$
+      {"messages":[{"version":1,"kind":"events","requestId":"f1000000-0000-4000-8000-000000000001","receivedAt":"2026-09-17T10:00:00Z","keyId":"22000000-0000-4000-8000-000000000001","organizationId":"10000000-0000-4000-8000-000000000001","appId":"20000000-0000-4000-8000-000000000001","environment":"development","logicalOrigin":"react-native/0.1.0","attestation":"absent","body":{"batchId":"f2000000-0000-4000-8000-000000000001","sentAt":"2026-09-17T09:59:59Z","environment":"development","platform":"android","sdkVersion":"0.1.0","events":[{"eventId":"f3000000-0000-4000-8000-000000000001","installationId":"f4000000-0000-4000-8000-000000000001","anonymousId":"f5000000-0000-4000-8000-000000000001","sessionId":"f6000000-0000-4000-8000-000000000001","name":"app_open","occurredAt":"2026-09-17T09:59:58Z","idempotencyKey":"app-open:pgtap-001","properties":{}}]}}]}
+    $json$::jsonb);
+    select public.ingest_sdk_messages($json$
+      {"messages":[{"version":1,"kind":"events","requestId":"f1000000-0000-4000-8000-000000000002","receivedAt":"2026-09-17T10:00:01Z","keyId":"22000000-0000-4000-8000-000000000001","organizationId":"10000000-0000-4000-8000-000000000001","appId":"20000000-0000-4000-8000-000000000001","environment":"development","logicalOrigin":"react-native/0.1.0","attestation":"absent","body":{"batchId":"f2000000-0000-4000-8000-000000000002","sentAt":"2026-09-17T10:00:00Z","environment":"development","platform":"android","sdkVersion":"0.1.0","events":[{"eventId":"f3000000-0000-4000-8000-000000000001","installationId":"f4000000-0000-4000-8000-000000000001","anonymousId":"f5000000-0000-4000-8000-000000000001","sessionId":"f6000000-0000-4000-8000-000000000001","name":"app_open","occurredAt":"2026-09-17T09:59:58Z","idempotencyKey":"app-open:pgtap-001","properties":{}}]}}]}
+    $json$::jsonb);
+  $$,
+  'dos entregas de ingestión idempotente no fallan'
+);
+
+select is(
+  (select count(*) from public.events where event_id = 'f3000000-0000-4000-8000-000000000001'),
+  1::bigint,
+  'la ingestión idempotente conserva una sola fila por event_id'
 );
 
 insert into auth.users (

@@ -26,7 +26,7 @@ Estado: aceptada. Particionar hoy complicaría la unicidad global necesaria para
 
 ## ADR-007 — Fecha de compatibilidad Cloudflare
 
-Estado: aceptada. Los Workers usan `2026-09-16`, la fecha más reciente soportada por el runtime instalado y publicada en la documentación consultada el 2026-09-17. Se actualizará junto con Wrangler y sus pruebas.
+Estado: aceptada. Cada Worker fija una fecha soportada por el runtime instalado; ingestión usa `2026-09-17`. Se actualizará junto con Wrangler, los tipos generados y sus pruebas, nunca de forma implícita.
 
 ## ADR-008 — Sesiones Supabase SSR verificadas
 
@@ -67,3 +67,15 @@ Estado: aceptada. `installation_id`, `anonymous_id` e identidad viven en Keychai
 ## ADR-017 — Interoperabilidad New Architecture sin acoplar las apps
 
 Estado: aceptada. El módulo Kotlin/Swift se autovincula y se resuelve con `TurboModuleRegistry`; React Native lo adapta mediante su capa oficial de interoperabilidad. Así no se modifican `MainApplication` ni `AppDelegate` y se mantiene Swift como implementación iOS. Se migrará a un TurboModule Codegen directo cuando Swift pueda consumir la interfaz generada sin un adaptador Objective-C++ adicional.
+
+## ADR-018 — AppKey pública con prueba de lectura separada
+
+Estado: aceptada. La appKey identifica una app y un entorno, limita cuotas y puede revocarse, pero vive dentro de una aplicación distribuida y por tanto no se considera secreta. Nunca autoriza consultas analíticas. La única lectura pública, la atribución de una instalación, exige un token opaco de 256 bits emitido al registrar esa instalación; solo su SHA-256 llega a Postgres.
+
+## ADR-019 — Queue antes de Postgres y RPC por lote
+
+Estado: aceptada. El camino HTTP valida y publica un mensaje duradero antes de responder `202`; no crea una llamada o fila externa por evento. El consumidor entrega hasta 50 mensajes a una RPC transaccional que vuelve a comprobar el ámbito de la clave y usa restricciones idempotentes. Fallos temporales reintentan con backoff; la DLQ explícita solo conserva IDs operativos y un motivo seguro, nunca el payload.
+
+## ADR-020 — Integridad móvil opcional pero no simulada
+
+Estado: aceptada. Los contratos reservan `App Attest`/`Play Integrity` y guardan el resultado `absent`, `unverified` o `verified`. En modo opcional el MVP sigue funcionando sin estos proveedores; en modo obligatorio falla de forma cerrada si el verificador no está configurado. Un token recibido no se marca como verificado sin una comprobación oficial.

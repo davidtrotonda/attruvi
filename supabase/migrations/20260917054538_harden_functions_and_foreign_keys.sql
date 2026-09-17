@@ -1,0 +1,57 @@
+-- Platform event triggers do not need to be callable through PostgREST.
+revoke all on function public.rls_auto_enable() from public, anon, authenticated;
+
+-- Every foreign key gets a left-prefix covering index. Besides joins, these indexes
+-- keep parent updates/deletes bounded as the event and attribution tables grow.
+create index if not exists ad_costs_account_fk_idx on public.ad_costs (connector_account_id, organization_id, app_id);
+create index if not exists ad_costs_ad_group_id_fk_idx on public.ad_costs (ad_group_id);
+create index if not exists ad_costs_ad_id_fk_idx on public.ad_costs (ad_id);
+create index if not exists ad_costs_source_id_fk_idx on public.ad_costs (source_id);
+create index if not exists ad_groups_campaign_fk_idx on public.ad_groups (campaign_id, source_id, organization_id, app_id);
+create index if not exists ads_ad_group_fk_idx on public.ads (ad_group_id, campaign_id, source_id, organization_id, app_id);
+create index if not exists app_platforms_app_fk_idx on public.app_platforms (app_id, organization_id);
+create index if not exists attribution_candidates_ad_group_fk_idx on public.attribution_candidates (ad_group_id);
+create index if not exists attribution_candidates_ad_fk_idx on public.attribution_candidates (ad_id);
+create index if not exists attribution_candidates_campaign_fk_idx on public.attribution_candidates (campaign_id);
+create index if not exists attribution_candidates_click_fk_idx on public.attribution_candidates (click_id, organization_id, app_id);
+create index if not exists attribution_candidates_installation_fk_idx on public.attribution_candidates (installation_id, organization_id, app_id);
+create index if not exists attribution_candidates_source_fk_idx on public.attribution_candidates (source_id);
+create index if not exists attributions_ad_group_fk_idx on public.attributions (ad_group_id);
+create index if not exists attributions_ad_fk_idx on public.attributions (ad_id);
+create index if not exists attributions_campaign_fk_idx on public.attributions (campaign_id);
+create index if not exists attributions_candidate_fk_idx on public.attributions (winning_candidate_id, organization_id, app_id);
+create index if not exists attributions_click_fk_idx on public.attributions (click_id, organization_id, app_id);
+create index if not exists attributions_installation_fk_idx on public.attributions (installation_id, organization_id, app_id);
+create index if not exists attributions_source_fk_idx on public.attributions (source_id);
+create index if not exists audit_log_actor_fk_idx on public.audit_log (actor_user_id);
+create index if not exists audit_log_app_fk_idx on public.audit_log (app_id, organization_id);
+create index if not exists campaigns_source_fk_idx on public.campaigns (source_id, organization_id, app_id);
+create index if not exists connector_accounts_app_fk_idx on public.connector_accounts (app_id, organization_id);
+create index if not exists connector_sync_runs_account_fk_idx on public.connector_sync_runs (connector_account_id, organization_id, app_id);
+create index if not exists daily_metrics_ad_group_fk_idx on public.daily_metrics (ad_group_id);
+create index if not exists daily_metrics_ad_fk_idx on public.daily_metrics (ad_id);
+create index if not exists daily_metrics_app_fk_idx on public.daily_metrics (app_id, organization_id);
+create index if not exists daily_metrics_campaign_fk_idx on public.daily_metrics (campaign_id);
+create index if not exists daily_metrics_source_fk_idx on public.daily_metrics (source_id);
+create index if not exists events_installation_fk_idx on public.events (installation_id, organization_id, app_id);
+create index if not exists events_session_fk_idx on public.events (session_id, organization_id, app_id);
+create index if not exists identities_installation_fk_idx on public.identities (installation_id, organization_id, app_id);
+create index if not exists installations_app_fk_idx on public.installations (app_id, organization_id);
+create index if not exists link_clicks_link_fk_idx on public.link_clicks (smart_link_id, organization_id, app_id);
+create index if not exists link_destinations_link_fk_idx on public.link_destinations (smart_link_id, organization_id, app_id);
+create index if not exists postback_attempts_job_fk_idx on public.postback_attempts (postback_job_id, organization_id, app_id);
+create index if not exists postback_destinations_app_fk_idx on public.postback_destinations (app_id, organization_id);
+create index if not exists postback_jobs_destination_fk_idx on public.postback_jobs (destination_id, organization_id, app_id);
+create index if not exists postback_jobs_event_fk_idx on public.postback_jobs (event_id, organization_id, app_id);
+create index if not exists public_sdk_keys_app_fk_idx on public.public_sdk_keys (app_id, organization_id);
+create index if not exists public_sdk_keys_created_by_fk_idx on public.public_sdk_keys (created_by);
+create index if not exists purchases_event_fk_idx on public.purchases (event_id, organization_id, app_id);
+create index if not exists purchases_installation_fk_idx on public.purchases (installation_id, organization_id, app_id);
+create index if not exists sessions_installation_fk_idx on public.sessions (installation_id, organization_id, app_id);
+create index if not exists smart_links_ad_group_fk_idx on public.smart_links (ad_group_id);
+create index if not exists smart_links_ad_fk_idx on public.smart_links (ad_id);
+create index if not exists smart_links_app_fk_idx on public.smart_links (app_id, organization_id);
+create index if not exists smart_links_campaign_fk_idx on public.smart_links (campaign_id);
+create index if not exists smart_links_source_fk_idx on public.smart_links (source_id);
+create index if not exists sources_app_fk_idx on public.sources (app_id, organization_id);
+create index if not exists subscriptions_installation_fk_idx on public.subscriptions (installation_id, organization_id, app_id);

@@ -47,6 +47,8 @@ La configuración de Supabase Auth, Google OAuth y sus URLs de retorno está en 
 
 La instalación y compatibilidad del SDK están en `packages/react-native/README.md` y `docs/SDK_COMPATIBILITY.md`.
 
+La API pública del SDK, sus límites, OpenAPI, Cloudflare Queue, DLQ y prueba de carga están en `docs/INGEST_API.md` y `workers/ingest/openapi.yaml`.
+
 ## Licencia
 
 MIT

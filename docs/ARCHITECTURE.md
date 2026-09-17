@@ -28,7 +28,7 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 | `packages/react-native` | SDK público: identidad segura, consentimiento, sesiones, atribución, cola offline y entrega por lotes | Contener una clave de servidor o recopilar IDFA/AAID sin permiso |
 | `packages/connectors` | Contratos normalizados para gasto publicitario | Inventar resultados cuando falten credenciales |
 | `workers/links` | Resolver enlaces desde KV/Supabase, producir clics en Queue y redirigir | Mostrar una página intermedia o guardar IP/UA en claro |
-| `workers/ingest` | Validar lotes del SDK antes de persistirlos | Confiar en `organization_id` del dispositivo |
+| `workers/ingest` | Resolver la appKey, limitar abuso, validar contratos, encolar y persistir por lotes | Confiar en IDs de tenant del dispositivo o usar la appKey como permiso de lectura |
 | Supabase | Fuente de verdad, Auth, RLS, idempotencia y colas | Exponer `service_role` a clientes |
 
 ## Límites de confianza
@@ -43,12 +43,31 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 ## Flujo de datos y fallos
 
 1. `workers/links` valida el slug, genera un identificador criptográficamente seguro, acepta el clic en Queue y responde `302`. KV guarda resoluciones positivas y negativas; las ediciones del panel purgan las claves afectadas.
-2. El SDK manda lotes pequeños con `event_id` e `idempotency_key` estables. `workers/ingest` aplica los esquemas de `packages/core`.
-3. Postgres impone unicidad por app para que los reintentos no dupliquen eventos, compras, costes ni postbacks.
+2. El SDK manda lotes pequeños con `event_id` e `idempotency_key` estables. `workers/ingest` resuelve el hash de la appKey mediante una configuración cacheada, aplica límites por app/IP, valida los esquemas de `packages/core` y responde `202` después de publicar un único mensaje en Queue.
+3. El consumidor agrupa hasta 50 mensajes en una sola RPC `SECURITY INVOKER`. Postgres vuelve a comprobar clave, app, organización y entorno, y sus restricciones absorben entregas repetidas sin duplicar instalaciones, eventos, compras ni suscripciones.
 4. Los jobs se reclaman con `FOR UPDATE SKIP LOCKED`; una llamada externa nunca mantiene abierta la transacción.
 5. Los errores recuperables pasan a reintento con backoff; los permanentes quedan auditados y visibles.
 
-El Worker de enlaces ya resuelve destinos reales mediante una RPC exclusiva de `service_role`, sirve AASA/assetlinks y persiste lotes idempotentes desde Queue. El SDK React Native ya produce el contrato público completo y el Worker de ingestión lo valida, exige una appKey con formato correcto y fija `receivedAt`. La autenticación criptográfica de esa appKey y la persistencia transaccional de los eventos siguen siendo la siguiente frontera del pipeline.
+El Worker de enlaces resuelve destinos reales mediante una RPC exclusiva de `service_role`, sirve AASA/assetlinks y persiste lotes idempotentes desde Queue. El SDK React Native produce el contrato público completo. El Worker de ingestión fija `received_at` y `request_id`, entrega a Queue y persiste de forma idempotente instalaciones, identidades hasheadas, sesiones, eventos, compras, suscripciones y señales de atribución. La appKey es deliberadamente pública: su estado, ámbito y cuotas se validan, pero una lectura de atribución requiere además una prueba opaca propia de la instalación.
+
+## Flujo específico de ingestión
+
+```text
+React Native SDK
+  → POST /v1/installations | /v1/events/batch | /v1/identify
+  → cuerpo acotado + Zod + reglas PII/reloj/origen lógico
+  → SHA-256(appKey) → KV → RPC de configuración solo si falta caché
+  → Rate Limiting de Cloudflare por IP y por app
+  → Queue: attruvi-ingest-events
+  → consumidor de hasta 50 mensajes
+  → una RPC ingest_sdk_messages(jsonb)
+  → instalaciones / identidades / sesiones / eventos / ingresos / atribución
+  ├─ éxito: ack + métricas de persistencia y lag
+  ├─ temporal: reintento exponencial
+  └─ permanente/agota reintentos: DLQ sin payload ni PII
+```
+
+`GET /v1/attribution` no acepta solo la appKey. Exige `installation_id` y el token emitido al registrar esa instalación; Postgres conserva únicamente su hash. App Attest/Play Integrity tiene un punto de extensión y un modo `required` que falla de forma cerrada, pero el MVP no finge validar un token hasta conectar los verificadores oficiales.
 
 ## Flujo específico de un enlace
 
@@ -75,4 +94,4 @@ Cuando el sistema operativo abre la app directamente, puede no solicitar la ruta
 
 ## Escala
 
-`events`, `link_clicks` y `postback_attempts` empiezan sin particionar para evitar la complejidad de claves únicas globales durante la primera etapa. La migración documenta el umbral y la retención. Al superar de forma sostenida 100 millones de filas, se crearán tablas mensuales por `occurred_at`, `clicked_at` y `attempted_at`, con escritura dirigida por mes, partición futura precreada y retirada de particiones vencidas. La idempotencia global seguirá en una tabla de claves compacta o se incluirá el mes en la clave de enrutamiento antes de migrar.
+`events`, `link_clicks` y `postback_attempts` empiezan sin particionar para evitar la complejidad de claves únicas globales durante la primera etapa. Todas las claves externas tienen índices de cobertura y la escritura de ingestión no realiza una llamada a Supabase por evento. La migración documenta el umbral y la retención. Al superar de forma sostenida 100 millones de filas, se crearán tablas mensuales por `occurred_at`, `clicked_at` y `attempted_at`, con escritura dirigida por mes, partición futura precreada y retirada de particiones vencidas. La idempotencia global seguirá en una tabla de claves compacta o se incluirá el mes en la clave de enrutamiento antes de migrar.

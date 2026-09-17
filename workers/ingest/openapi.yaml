@@ -1,0 +1,161 @@
+openapi: 3.1.0
+info:
+  title: Attruvi SDK Ingest API
+  version: 1.0.0
+  description: Entrada pública y asíncrona para el SDK React Native de Attruvi.
+servers:
+  - url: https://ingest.attruvi.com
+security:
+  - AppKey: []
+paths:
+  /health:
+    get:
+      security: []
+      operationId: health
+      responses:
+        "200":
+          description: Worker disponible.
+  /v1/installations:
+    post:
+      operationId: createInstallation
+      parameters:
+        - $ref: "#/components/parameters/SdkHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Installation"
+      responses:
+        "202":
+          description: Instalación validada y encolada. Devuelve una prueba opaca para consultar su atribución.
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /v1/events/batch:
+    post:
+      operationId: createEventBatch
+      parameters:
+        - $ref: "#/components/parameters/SdkHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventBatch"
+      responses:
+        "202": { description: Lote validado y encolado. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { description: Cuerpo o lote demasiado grande. }
+        "422": { description: Timestamp fuera de la ventana admitida. }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /v1/identify:
+    post:
+      operationId: identifyInstallation
+      parameters:
+        - $ref: "#/components/parameters/SdkHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Identify"
+      responses:
+        "202": { description: Identidad opaca validada y encolada. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+  /v1/attribution:
+    get:
+      operationId: getAttribution
+      security:
+        - AppKey: []
+          InstallationToken: []
+      parameters:
+        - $ref: "#/components/parameters/SdkHeader"
+        - name: installation_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Atribución filtrada de esa instalación. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { description: Prueba inválida o atribución todavía no disponible. }
+components:
+  securitySchemes:
+    AppKey:
+      type: apiKey
+      in: header
+      name: x-attruvi-app-key
+      description: Identificador público y revocable; no es un secreto ni concede lectura.
+    InstallationToken:
+      type: apiKey
+      in: header
+      name: x-attruvi-installation-token
+      description: Prueba opaca emitida al registrar la instalación.
+  parameters:
+    SdkHeader:
+      name: x-attruvi-sdk
+      in: header
+      required: true
+      schema: { type: string, example: react-native/0.1.0 }
+  schemas:
+    ClientContext:
+      type: object
+      required: [installationId, anonymousId, occurredAt, environment, platform, sdkVersion]
+      properties:
+        installationId: { type: string, format: uuid }
+        anonymousId: { type: string, format: uuid }
+        occurredAt: { type: string, format: date-time }
+        environment: { type: string, enum: [development, staging, production] }
+        platform: { type: string, enum: [ios, android] }
+        sdkVersion: { type: string, maxLength: 64 }
+        appVersion: { type: string, maxLength: 64 }
+    Installation:
+      allOf:
+        - $ref: "#/components/schemas/ClientContext"
+        - type: object
+          required: [consent]
+          properties:
+            consent: { type: string, enum: [granted, limited] }
+            attribution: { type: object, additionalProperties: true }
+    Identify:
+      allOf:
+        - $ref: "#/components/schemas/ClientContext"
+        - type: object
+          required: [userId]
+          properties:
+            userId: { type: string, maxLength: 255 }
+            traits: { type: object, additionalProperties: true }
+    Event:
+      type: object
+      required: [eventId, installationId, anonymousId, sessionId, name, occurredAt, idempotencyKey, properties]
+      properties:
+        eventId: { type: string, format: uuid }
+        installationId: { type: string, format: uuid }
+        anonymousId: { type: string, format: uuid }
+        sessionId: { type: string, format: uuid }
+        name: { type: string, maxLength: 80 }
+        occurredAt: { type: string, format: date-time }
+        idempotencyKey: { type: string, minLength: 8, maxLength: 255 }
+        properties: { type: object, additionalProperties: true }
+    EventBatch:
+      type: object
+      required: [batchId, sentAt, environment, platform, sdkVersion, events]
+      properties:
+        batchId: { type: string, format: uuid }
+        sentAt: { type: string, format: date-time }
+        environment: { type: string, enum: [development, staging, production] }
+        platform: { type: string, enum: [ios, android] }
+        sdkVersion: { type: string, maxLength: 64 }
+        events:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: { $ref: "#/components/schemas/Event" }
+  responses:
+    BadRequest:
+      description: JSON o contrato inválido; la respuesta incluye requestId pero no detalles sensibles.
+    Unauthorized:
+      description: appKey ausente o no reconocida.
+    RateLimited:
+      description: Límite por app, IP o abuso superado.

@@ -1,58 +1,38 @@
-import { eventBatchSchema, sdkEventBatchSchema } from "@attruvi/core";
-
-function json(body: unknown, status = 200): Response {
-  return Response.json(body, {
-    status,
-    headers: { "cache-control": "no-store" },
-  });
-}
+import { consumeIngestBatch } from "./consumer";
+import { type DeadLetter, type QueuedIngestMessage } from "./contracts";
+import { createIngestHandler } from "./router";
+import { createCloudflareRuntime, writeMetric } from "./runtime";
+import { persistIngestMessages } from "./supabase";
 
 export default {
-  async fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url);
+  async fetch(request: Request, env: Env): Promise<Response> {
     try {
-      if (request.method === "GET" && url.pathname === "/health") {
-        return json({ service: "attruvi-ingest", status: "ok" });
-      }
-
-      if (request.method === "POST" && url.pathname === "/v1/events/batch") {
-        const contentLength = Number(request.headers.get("content-length") ?? "0");
-        if (contentLength > 256_000) {
-          return json({ code: "payload_too_large" }, 413);
-        }
-
-        const body = await request.json();
-        const isSdkBatch = typeof body === "object" && body !== null && "sdkVersion" in body;
-        const parsed = (isSdkBatch ? sdkEventBatchSchema : eventBatchSchema).safeParse(body);
-        if (!parsed.success) {
-          return json({ code: "invalid_event_batch" }, 400);
-        }
-
-        if (isSdkBatch && !/^attruvi_[A-Za-z0-9_-]{8,}$/.test(request.headers.get("x-attruvi-app-key") ?? "")) {
-          return json({ code: "invalid_app_key" }, 401);
-        }
-
-        return json(
-          {
-            status: "validated",
-            batchId: parsed.data.batchId,
-            accepted: parsed.data.events.length,
-            receivedAt: new Date().toISOString(),
-          },
-          202,
-        );
-      }
-
-      return json({ code: "not_found" }, 404);
+      return await createIngestHandler(createCloudflareRuntime(env))(request);
     } catch (error) {
+      const requestId = crypto.randomUUID();
       console.error(
         JSON.stringify({
           message: "ingest request failed",
-          path: url.pathname,
-          error: error instanceof Error ? error.message : "unknown error",
+          path: new URL(request.url).pathname,
+          requestId,
+          error: error instanceof Error ? error.name : "unknown_error",
         }),
       );
-      return json({ code: "invalid_json" }, 400);
+      writeMetric(env, "rejected", 1, { code: "service_unavailable" });
+      return Response.json(
+        { code: "service_temporarily_unavailable", requestId },
+        { status: 503, headers: { "cache-control": "no-store", "x-request-id": requestId } },
+      );
     }
   },
-} satisfies ExportedHandler<Env>;
+  async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
+    await consumeIngestBatch(batch, {
+      persist: (messages: readonly QueuedIngestMessage[]) => persistIngestMessages(env, messages),
+      async deadLetter(message: DeadLetter) {
+        await env.DEAD_LETTER_QUEUE.send(message, { contentType: "json" });
+      },
+      metric: (name, value, dimensions) => writeMetric(env, name, value, dimensions),
+      now: () => new Date(),
+    });
+  },
+} satisfies ExportedHandler<Env, unknown>;
