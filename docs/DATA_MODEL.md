@@ -1,6 +1,6 @@
 # Modelo de datos
 
-La fuente ejecutable es la migración `supabase/migrations/20260916230710_initial_attruvi_schema.sql`. No se debe modificar un proyecto remoto a mano.
+La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. No se debe modificar un proyecto remoto a mano.
 
 ## Diccionario
 
@@ -29,7 +29,7 @@ La fuente ejecutable es la migración `supabase/migrations/20260916230710_initia
 
 Todas las tablas públicas tienen RLS activado. `anon` no recibe privilegios. Un usuario autenticado puede leer una fila solo cuando `private.is_organization_member(organization_id)` valida su membresía. `owner` y `admin` pueden mutar tablas de configuración; `viewer` no.
 
-Las dos funciones `SECURITY DEFINER` son helpers internos para evitar recursión sobre `organization_members`. Ambas viven en `private`, comprueban `auth.uid()`, fijan `search_path = ''`, devuelven únicamente booleanos y conceden ejecución solo al rol autenticado. La reclamación de postbacks es `SECURITY INVOKER` y solo puede ejecutarla `service_role`.
+Las dos funciones `SECURITY DEFINER` de `private` son helpers internos para evitar recursión sobre `organization_members`. Las RPC públicas de onboarding también requieren privilegios elevados para crear el espacio inicial en una sola transacción. Todas comprueban `auth.uid()`, fijan `search_path = ''`, revocan acceso a `public` y `anon`, y las RPC nunca aceptan un identificador de organización enviado por el cliente. La reclamación de postbacks es `SECURITY INVOKER` y solo puede ejecutarla `service_role`.
 
 ## Particionado y retención
 

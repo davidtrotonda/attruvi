@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { AuthEntry } from "@/components/auth/auth-entry";
 
 const githubUrl =
   process.env.NEXT_PUBLIC_GITHUB_URL ?? "https://github.com/davidtrotonda/attruvi";
@@ -73,15 +74,18 @@ export default function Home() {
           <a href="#open-source">Código abierto</a>
           <a href="#preguntas">Preguntas</a>
         </nav>
-        <a
-          className="header-github"
-          href={githubUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <GithubIcon />
-          GitHub
-        </a>
+        <div className="header-actions">
+          <AuthEntry />
+          <a
+            className="header-github"
+            href={githubUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <GithubIcon />
+            GitHub
+          </a>
+        </div>
       </header>
 
       <section className="hero" id="inicio">

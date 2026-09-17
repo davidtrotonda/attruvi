@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(12);
 
 select has_table('public', 'events', 'events existe en el modelo versionado');
 
@@ -158,6 +158,38 @@ select ok(
   and (select count(*) >= 6 from public.daily_metrics where app_id = '20000000-0000-4000-8000-000000000001'),
   'los seeds contienen datos suficientes para un dashboard útil'
 );
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000202', true);
+
+select lives_ok(
+  $$
+    select count(*)
+    from public.ensure_personal_workspace('Otra propietaria') first_access
+    cross join lateral public.ensure_personal_workspace('Otra propietaria') second_access
+  $$,
+  'el primer acceso prepara el espacio personal de forma atómica'
+);
+
+select ok(
+  (
+    select count(*) = 1
+    from public.organizations
+    where created_by = '00000000-0000-4000-8000-000000000202'
+      and is_personal
+  )
+  and (
+    select count(*) = 1
+    from public.organization_members member
+    join public.organizations organization on organization.id = member.organization_id
+    where member.user_id = '00000000-0000-4000-8000-000000000202'
+      and member.role = 'owner'
+      and organization.is_personal
+  ),
+  'dos accesos conservan una sola organización personal y una membresía owner'
+);
+
+reset role;
 
 select * from finish();
 rollback;

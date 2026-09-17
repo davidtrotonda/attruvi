@@ -1,12 +1,19 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const migration = await readFile(
-  new URL("../supabase/migrations/20260916230710_initial_attruvi_schema.sql", import.meta.url),
-  "utf8",
-);
+const migrationDirectory = new URL("../supabase/migrations/", import.meta.url);
+const migrationFiles = (await readdir(migrationDirectory))
+  .filter((file) => file.endsWith(".sql"))
+  .sort();
+const migration = (
+  await Promise.all(
+    migrationFiles.map((file) =>
+      readFile(new URL(file, migrationDirectory), "utf8"),
+    ),
+  )
+).join("\n");
 const seed = await readFile(new URL("../supabase/seed.sql", import.meta.url), "utf8");
 const databaseTests = await readFile(
   new URL("../supabase/tests/attruvi_schema_test.sql", import.meta.url),
@@ -62,6 +69,13 @@ assert.match(migration, /unique \(app_id, event_id\)/i);
 assert.match(migration, /security definer[\s\S]+set search_path = ''/i);
 assert.match(migration, /for update skip locked/i);
 assert.match(migration, /Partition monthly by occurred_at/i);
+assert.match(migration, /ensure_personal_workspace/i);
+assert.match(migration, /complete_personal_onboarding/i);
+assert.match(migration, /organizations_one_personal_workspace_per_creator/i);
+assert.match(
+  migration,
+  /revoke all on function public\.ensure_personal_workspace\(text\)[\s\S]+grant execute[\s\S]+to authenticated/i,
+);
 
 for (const source of ["google_ads", "meta_ads", "tiktok_ads", "affiliate", "influencer", "organic"]) {
   assert.match(seed, new RegExp(`'${source}'`, "i"), `el seed no contiene ${source}`);

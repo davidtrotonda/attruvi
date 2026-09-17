@@ -22,10 +22,13 @@ insert into public.profiles (id, display_name)
 values ('00000000-0000-4000-8000-000000000101', 'Propietaria Demo')
 on conflict (id) do nothing;
 
-insert into public.organizations (id, name, slug, default_timezone, default_currency, created_by)
+insert into public.organizations (
+  id, name, slug, default_timezone, default_currency, created_by,
+  is_personal, onboarding_completed_at
+)
 values (
   '10000000-0000-4000-8000-000000000001', 'Demo', 'demo', 'Europe/Madrid', 'EUR',
-  '00000000-0000-4000-8000-000000000101'
+  '00000000-0000-4000-8000-000000000101', true, now()
 )
 on conflict (id) do nothing;
 

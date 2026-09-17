@@ -43,6 +43,8 @@ npm run verify
 
 La arquitectura y el estado real están en `docs/ARCHITECTURE.md` y `docs/BUILD_STATUS.md`.
 
+La configuración de Supabase Auth, Google OAuth y sus URLs de retorno está en `docs/AUTH_SETUP.md`.
+
 ## Licencia
 
 MIT
