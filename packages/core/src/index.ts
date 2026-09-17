@@ -150,6 +150,15 @@ const sdkJsonValueSchema: z.ZodType<SdkJsonValue> = z.lazy(() =>
 
 export const sdkEnvironmentSchema = z.enum(["development", "staging", "production"]);
 export const sdkPlatformSchema = z.enum(["ios", "android"]);
+export const attributionScopeSchema = z.enum(["acquisition", "reengagement"]);
+export const attributionMatchTypeSchema = z.enum([
+  "direct_link",
+  "install_referrer",
+  "network_signal",
+  "probabilistic",
+  "organic",
+  "manual",
+]);
 
 export const sdkAttributionSchema = z
   .object({
@@ -278,8 +287,14 @@ export const attributionSchema = z
     campaignId: campaignIdSchema.nullable(),
     adGroupId: adGroupIdSchema.nullable(),
     adId: adIdSchema.nullable(),
-    method: z.enum(["direct_link", "install_referrer", "network_signal", "probabilistic", "organic"]),
+    method: attributionMatchTypeSchema,
+    matchType: attributionMatchTypeSchema,
+    scope: attributionScopeSchema,
+    engagementId: z.uuid(),
     confidence: z.number().min(0).max(1),
+    deterministic: z.boolean(),
+    ruleVersion: z.string().min(1).max(64),
+    decisionReason: z.string().min(1),
     attributedAt: utcDateTimeSchema,
   })
   .strict();

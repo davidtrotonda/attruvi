@@ -42,6 +42,10 @@ export function createMemoryRuntime(options: {
     async hash(value: string) {
       return `hash:${value}`.padEnd(64, "0").slice(0, 64);
     },
+    async createProbabilisticEvidence(ipAddress: string, userAgent: string) {
+      if (!ipAddress || !userAgent) return null;
+      return { networkPrefixHash: "1".repeat(64), userAgentHash: "2".repeat(64) };
+    },
     async readAttribution() {
       return options.attribution ?? null;
     },

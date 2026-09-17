@@ -72,9 +72,13 @@ export async function consumeIngestBatch(
     );
     const appIds = new Set(valid.map(({ body }) => body.appId));
     const metricScope = appIds.size === 1 ? valid[0]!.body.appId : "mixed";
-    runtime.metric("persisted", result.events + result.installations + result.identities, {
+    runtime.metric(
+      "persisted",
+      result.events + result.installations + result.identities + result.attributions,
+      {
       appId: metricScope,
-    });
+      },
+    );
     runtime.metric("lag", lag, { appId: metricScope });
   } catch (error) {
     const permanent = error instanceof SupabasePersistenceError && !error.transient;

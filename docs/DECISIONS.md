@@ -79,3 +79,18 @@ Estado: aceptada. El camino HTTP valida y publica un mensaje duradero antes de r
 ## ADR-020 — Integridad móvil opcional pero no simulada
 
 Estado: aceptada. Los contratos reservan `App Attest`/`Play Integrity` y guardan el resultado `absent`, `unverified` o `verified`. En modo opcional el MVP sigue funcionando sin estos proveedores; en modo obligatorio falla de forma cerrada si el verificador no está configurado. Un token recibido no se marca como verificado sin una comprobación oficial.
+
+## ADR-021 — Atribución versionada, explicable y separada por objetivo
+
+Estado: aceptada. La adquisición pertenece a la instalación y la reactivación a una sesión. Un
+evaluador puro ordena evidencia directa, Install Referrer, señales oficiales consentidas,
+coincidencia limitada y fallback orgánico; los empates usan fecha del clic y clave estable. Cada regla
+tiene versión y permite `dry-run`. Se conservan candidatos, explicación y snapshots históricos antes
+de marcar una decisión actual, por lo que una reejecución idempotente no borra la trazabilidad.
+
+## ADR-022 — Probabilística cerrada por defecto
+
+Estado: aceptada. No se usa fingerprinting persistente. La opción probabilística exige consentimiento
+completo, base legal explícita, dos hashes salados y una ventana corta. Los Workers comparten el salt
+sin guardarlo en Git; la base solo recibe hashes y una explicación minimizada. El resultado siempre se
+etiqueta `probabilistic` y nunca determinista. iOS sin señal permitida cae en evidencia insuficiente.

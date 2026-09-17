@@ -19,6 +19,23 @@ function randomToken(): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+function networkPrefix(ipAddress: string): string | null {
+  const normalized = ipAddress.trim();
+  if (!normalized || normalized === "unknown") return null;
+  if (normalized.includes(".")) {
+    const octets = normalized.split(".");
+    return octets.length === 4 ? octets.slice(0, 3).join(".") : null;
+  }
+  if (normalized.includes(":")) {
+    return normalized.split(":").slice(0, 4).join(":");
+  }
+  return null;
+}
+
+async function saltedHash(salt: string, value: string): Promise<string> {
+  return sha256Hex(`${salt}|${value}`);
+}
+
 export function writeMetric(
   env: Env,
   name: MetricName,
@@ -51,6 +68,15 @@ export function createCloudflareRuntime(env: Env): IngestRuntime {
       return { token, hash: await sha256Hex(token) };
     },
     hash: sha256Hex,
+    async createProbabilisticEvidence(ipAddress, userAgent) {
+      const prefix = networkPrefix(ipAddress);
+      const salt = env.CLICK_HASH_SALT?.trim();
+      if (!prefix || !userAgent || !salt) return null;
+      return {
+        networkPrefixHash: await saltedHash(salt, prefix),
+        userAgentHash: await saltedHash(salt, userAgent),
+      };
+    },
     readAttribution: (appId, installationId, tokenHash) =>
       readAttributionFromSupabase(env, appId, installationId, tokenHash),
     metric: (name, value, dimensions) => writeMetric(env, name, value, dimensions),

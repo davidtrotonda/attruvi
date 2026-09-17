@@ -15,10 +15,15 @@ const migration = (
   )
 ).join("\n");
 const seed = await readFile(new URL("../supabase/seed.sql", import.meta.url), "utf8");
-const databaseTests = await readFile(
-  new URL("../supabase/tests/attruvi_schema_test.sql", import.meta.url),
-  "utf8",
-);
+const databaseTestDirectory = new URL("../supabase/tests/", import.meta.url);
+const databaseTests = (
+  await Promise.all(
+    (await readdir(databaseTestDirectory))
+      .filter((file) => file.endsWith(".sql"))
+      .sort()
+      .map((file) => readFile(new URL(file, databaseTestDirectory), "utf8")),
+  )
+).join("\n");
 
 const requiredTables = [
   "organizations",
@@ -38,6 +43,7 @@ const requiredTables = [
   "identities",
   "attribution_candidates",
   "attributions",
+  "attribution_rule_sets",
   "events",
   "sessions",
   "purchases",
@@ -77,8 +83,12 @@ assert.match(migration, /create or replace function public\.upsert_personal_smar
 assert.match(migration, /create or replace function public\.resolve_smart_link\(requested_slug text\)/i);
 assert.match(migration, /create or replace function public\.resolve_ingest_app_key\(provided_key_hash text\)/i);
 assert.match(migration, /create or replace function public\.ingest_sdk_messages\(payload jsonb\)/i);
+assert.match(migration, /create or replace function public\.ingest_sdk_messages_v2\(payload jsonb\)/i);
+assert.match(migration, /create or replace function public\.attribute_installation\(/i);
+assert.match(migration, /create or replace function public\.get_attribution_explanation\(/i);
 assert.match(migration, /create or replace function public\.read_sdk_attribution\(/i);
 assert.match(migration, /grant execute on function public\.ingest_sdk_messages\(jsonb\) to service_role/i);
+assert.match(migration, /grant execute on function public\.ingest_sdk_messages_v2\(jsonb\) to service_role/i);
 assert.match(migration, /installation_access_token_hash bytea/i);
 assert.match(migration, /revoke all on function public\.rls_auto_enable\(\) from public, anon, authenticated/i);
 assert.match(migration, /create index if not exists events_installation_fk_idx/i);
@@ -106,6 +116,16 @@ for (const proof of [
   "mantienen precisión",
   "dashboard útil",
   "ingestión idempotente",
+  "click_id directo",
+  "Play Install Referrer",
+  "dos candidatos",
+  "clic expirado",
+  "primer open duplicado",
+  "reinstalación",
+  "reactivación",
+  "sin consentimiento",
+  "iOS sin señal",
+  "dry-run",
 ]) {
   assert.match(databaseTests, new RegExp(proof, "i"), `falta la prueba: ${proof}`);
 }

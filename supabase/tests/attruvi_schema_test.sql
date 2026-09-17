@@ -20,7 +20,7 @@ select has_function(
 );
 
 select has_function(
-  'public', 'ingest_sdk_messages', array['jsonb'],
+  'public', 'ingest_sdk_messages_v2', array['jsonb'],
   'la Queue persiste un lote con una sola operación'
 );
 
@@ -63,10 +63,10 @@ select is(
 
 select lives_ok(
   $$
-    select public.ingest_sdk_messages($json$
+    select public.ingest_sdk_messages_v2($json$
       {"messages":[{"version":1,"kind":"events","requestId":"f1000000-0000-4000-8000-000000000001","receivedAt":"2026-09-17T10:00:00Z","keyId":"22000000-0000-4000-8000-000000000001","organizationId":"10000000-0000-4000-8000-000000000001","appId":"20000000-0000-4000-8000-000000000001","environment":"development","logicalOrigin":"react-native/0.1.0","attestation":"absent","body":{"batchId":"f2000000-0000-4000-8000-000000000001","sentAt":"2026-09-17T09:59:59Z","environment":"development","platform":"android","sdkVersion":"0.1.0","events":[{"eventId":"f3000000-0000-4000-8000-000000000001","installationId":"f4000000-0000-4000-8000-000000000001","anonymousId":"f5000000-0000-4000-8000-000000000001","sessionId":"f6000000-0000-4000-8000-000000000001","name":"app_open","occurredAt":"2026-09-17T09:59:58Z","idempotencyKey":"app-open:pgtap-001","properties":{}}]}}]}
     $json$::jsonb);
-    select public.ingest_sdk_messages($json$
+    select public.ingest_sdk_messages_v2($json$
       {"messages":[{"version":1,"kind":"events","requestId":"f1000000-0000-4000-8000-000000000002","receivedAt":"2026-09-17T10:00:01Z","keyId":"22000000-0000-4000-8000-000000000001","organizationId":"10000000-0000-4000-8000-000000000001","appId":"20000000-0000-4000-8000-000000000001","environment":"development","logicalOrigin":"react-native/0.1.0","attestation":"absent","body":{"batchId":"f2000000-0000-4000-8000-000000000002","sentAt":"2026-09-17T10:00:00Z","environment":"development","platform":"android","sdkVersion":"0.1.0","events":[{"eventId":"f3000000-0000-4000-8000-000000000001","installationId":"f4000000-0000-4000-8000-000000000001","anonymousId":"f5000000-0000-4000-8000-000000000001","sessionId":"f6000000-0000-4000-8000-000000000001","name":"app_open","occurredAt":"2026-09-17T09:59:58Z","idempotencyKey":"app-open:pgtap-001","properties":{}}]}}]}
     $json$::jsonb);
   $$,

@@ -49,6 +49,8 @@ La instalación y compatibilidad del SDK están en `packages/react-native/README
 
 La API pública del SDK, sus límites, OpenAPI, Cloudflare Queue, DLQ y prueba de carga están en `docs/INGEST_API.md` y `workers/ingest/openapi.yaml`.
 
+El orden de evidencia, la exactitud real por plataforma y la explicación de decisiones están en `docs/ATTRIBUTION.md`.
+
 ## Licencia
 
 MIT

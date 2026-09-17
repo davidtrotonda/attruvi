@@ -17,6 +17,7 @@ const configuration: AppKeyConfiguration = {
   allowedPlatforms: ["android"],
   attestationMode: "optional",
   cacheTtlSeconds: 60,
+  probabilisticEnabled: false,
 };
 
 const payload = JSON.stringify({

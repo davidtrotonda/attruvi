@@ -21,11 +21,16 @@ La capa de App Attest/Play Integrity está preparada mediante `attestation_mode`
 
 1. Crea `attruvi-ingest-events`, `attruvi-ingest-dead-letter`, el KV de configuración y el dataset Analytics Engine.
 2. Asocia los bindings de `wrangler.jsonc`. Los `namespace_id` de rate limiting son espacios lógicos independientes, no secretos.
-3. Carga `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` con `wrangler secret put`; nunca los pongas en Git.
+3. Carga `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `CLICK_HASH_SALT` con `wrangler secret put`; nunca los pongas en Git. El salt debe ser el mismo valor aleatorio usado por `workers/links`.
 4. Aplica todas las migraciones versionadas de `supabase/migrations` en orden; ingestión incluye el pipeline, dos correcciones reproducibles y el endurecimiento/índices posterior.
 5. Despliega con `npx wrangler deploy` desde `workers/ingest`.
 
 La configuración positiva de una app se conserva en KV entre 5 y 300 segundos, limitada además por `APP_CONFIG_CACHE_TTL_SECONDS`; el valor por defecto es 60. Una clave desconocida se cachea solo 15 segundos. Por tanto, una revocación puede tardar como máximo el menor de ambos TTL en propagarse a un edge que ya tenía una entrada válida.
+
+El consumidor llama a `ingest_sdk_messages_v2`. Esa RPC persiste primero el lote idempotente y
+después atribuye la adquisición cuando contiene `install`, o la reactivación cuando una sesión nueva
+contiene `app_open`/`session_start`. Solo si la regla activa permite coincidencia probabilística el
+Worker añade dos hashes minimizados; nunca encola la IP o el agente de usuario originales.
 
 Para desarrollo reproducible:
 

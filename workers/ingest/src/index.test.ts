@@ -24,6 +24,7 @@ const appConfiguration: AppKeyConfiguration = {
   allowedPlatforms: ["ios", "android"],
   attestationMode: "optional",
   cacheTtlSeconds: 60,
+  probabilisticEnabled: false,
 };
 
 const baseHeaders = {
@@ -140,6 +141,34 @@ describe("API pública de ingestión", () => {
     ]);
   });
 
+  it("solo añade señales probabilísticas minimizadas cuando la regla lo habilita", async () => {
+    const runtime = createMemoryRuntime({
+      configuration: { ...appConfiguration, probabilisticEnabled: true },
+    });
+    const body = {
+      installationId: "20000000-0000-4000-8000-000000000009",
+      anonymousId: "21000000-0000-4000-8000-000000000009",
+      occurredAt: "2026-09-17T09:58:00.000Z",
+      environment: "production",
+      platform: "android",
+      sdkVersion: "0.1.0",
+      consent: "granted",
+    };
+    const response = await createIngestHandler(runtime)(
+      post("/v1/installations", body, {
+        ...baseHeaders,
+        "user-agent": "private-agent-that-must-not-be-queued",
+      }),
+    );
+    expect(response.status).toBe(202);
+    expect(runtime.queue.messages[0]?.probabilisticEvidence).toEqual({
+      networkPrefixHash: "1".repeat(64),
+      userAgentHash: "2".repeat(64),
+    });
+    expect(JSON.stringify(runtime.queue.messages[0])).not.toContain("203.0.113.42");
+    expect(JSON.stringify(runtime.queue.messages[0])).not.toContain("private-agent");
+  });
+
   it("acepta un reloj atrasado y rechaza eventos futuros", async () => {
     const runtime = createMemoryRuntime({ configuration: appConfiguration });
     const handler = createIngestHandler(runtime);
@@ -224,8 +253,12 @@ describe("API pública de ingestión", () => {
       configuration: appConfiguration,
       attribution: {
         method: "install_referrer",
+        matchType: "install_referrer",
+        scope: "acquisition",
         confidence: 1,
+        deterministic: true,
         attributedAt: "2026-09-17T09:58:00.000Z",
+        ruleVersion: "v1",
         source: "Google Ads",
       },
     });
@@ -265,7 +298,7 @@ describe("consumidor de Queue", () => {
     const runtime: QueuePersistence & { deadLetters: DeadLetter[] } = {
       deadLetters,
       async persist() {
-        return { messages: 1, events: 1, installations: 1, identities: 1 };
+        return { messages: 1, events: 1, installations: 1, identities: 1, attributions: 1 };
       },
       async deadLetter(message) {
         deadLetters.push(message);

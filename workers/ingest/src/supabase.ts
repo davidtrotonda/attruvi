@@ -12,8 +12,12 @@ import type { AttributionView } from "./router";
 const attributionViewSchema = z
   .object({
     method: z.string().min(1).max(64),
+    matchType: z.string().min(1).max(64),
+    scope: z.literal("acquisition"),
     confidence: z.number().min(0).max(1),
+    deterministic: z.boolean(),
     attributedAt: z.iso.datetime({ offset: true }),
+    ruleVersion: z.string().min(1).max(64),
     source: z.string().max(255).optional(),
     campaign: z.string().max(255).optional(),
     adGroup: z.string().max(255).optional(),
@@ -110,7 +114,7 @@ export async function persistIngestMessages(
   env: Env,
   messages: readonly QueuedIngestMessage[],
 ): Promise<PersistenceResult> {
-  const value = await callRpc(env, "ingest_sdk_messages", { payload: { messages } });
+  const value = await callRpc(env, "ingest_sdk_messages_v2", { payload: { messages } });
   const parsed = persistenceResultSchema.safeParse(value);
   if (!parsed.success) throw new SupabasePersistenceError(422, false);
   return parsed.data;

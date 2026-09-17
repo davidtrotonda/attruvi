@@ -60,7 +60,7 @@ React Native SDK
   → Rate Limiting de Cloudflare por IP y por app
   → Queue: attruvi-ingest-events
   → consumidor de hasta 50 mensajes
-  → una RPC ingest_sdk_messages(jsonb)
+  → una RPC ingest_sdk_messages_v2(jsonb)
   → instalaciones / identidades / sesiones / eventos / ingresos / atribución
   ├─ éxito: ack + métricas de persistencia y lag
   ├─ temporal: reintento exponencial
@@ -68,6 +68,24 @@ React Native SDK
 ```
 
 `GET /v1/attribution` no acepta solo la appKey. Exige `installation_id` y el token emitido al registrar esa instalación; Postgres conserva únicamente su hash. App Attest/Play Integrity tiene un punto de extensión y un modo `required` que falla de forma cerrada, pero el MVP no finge validar un token hasta conectar los verificadores oficiales.
+
+## Motor de atribución
+
+```text
+evidencia directa → Install Referrer → señal oficial consentida
+  → coincidencia limitada habilitada → orgánico
+  → candidatos puntuados y ordenados de forma estable
+  → decisión por versión de regla
+  ├─ acquisition: engagement_id = installation_id
+  └─ reengagement: engagement_id = session_id
+```
+
+`attribution_rule_sets` conserva ventanas y política probabilística por app. El evaluador primero
+produce un resultado puro; `dry-run` compara ese resultado con la decisión actual. Al aplicar, los
+candidatos y la decisión se escriben en la misma transacción con snapshots de IDs externos y nombres.
+La misma entrada y versión conserva el mismo ganador. Una corrección manual crea otra versión, exige
+motivo y deja un registro de auditoría. La tabla pública de exactitud y limitaciones está en
+`docs/ATTRIBUTION.md`.
 
 ## Flujo específico de un enlace
 

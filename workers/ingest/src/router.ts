@@ -15,8 +15,12 @@ export type MetricName = "accepted" | "rejected" | "queued" | "persisted" | "lag
 
 export interface AttributionView {
   readonly method: string;
+  readonly matchType: string;
+  readonly scope: "acquisition";
   readonly confidence: number;
+  readonly deterministic: boolean;
   readonly attributedAt: string;
+  readonly ruleVersion: string;
   readonly source?: string | undefined;
   readonly campaign?: string | undefined;
   readonly adGroup?: string | undefined;
@@ -32,6 +36,10 @@ export interface IngestRuntime {
   enqueue(message: QueuedIngestMessage): Promise<void>;
   issueInstallationToken(): Promise<{ token: string; hash: string }>;
   hash(value: string): Promise<string>;
+  createProbabilisticEvidence(
+    ipAddress: string,
+    userAgent: string,
+  ): Promise<{ networkPrefixHash: string; userAgentHash: string } | null>;
   readAttribution(
     appId: string,
     installationId: string,
@@ -233,6 +241,12 @@ export function createIngestHandler(runtime: IngestRuntime) {
     }
 
     const receivedAt = now.toISOString();
+    const probabilisticEvidence = configuration.probabilisticEnabled
+      ? await runtime.createProbabilisticEvidence(
+          clientIp(request),
+          request.headers.get("user-agent")?.slice(0, 512) ?? "",
+        )
+      : null;
     const base = {
       version: 1 as const,
       requestId,
@@ -243,6 +257,7 @@ export function createIngestHandler(runtime: IngestRuntime) {
       environment: configuration.environment,
       logicalOrigin,
       attestation,
+      ...(probabilisticEvidence ? { probabilisticEvidence } : {}),
     };
 
     let message: QueuedIngestMessage;

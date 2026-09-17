@@ -10,7 +10,7 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 | Apps | `apps`, `app_platforms`, `public_sdk_keys` | Configuración, identificadores iOS/Android y claves públicas hasheadas/revocables |
 | Jerarquía publicitaria | `sources`, `campaigns`, `ad_groups`, `ads` | Fuente → campaña → grupo → anuncio con claves externas y consistencia de tenant |
 | Enlaces | `smart_links`, `link_destinations`, `link_clicks` | Configuración, destinos y clics idempotentes |
-| Identidad y atribución | `installations`, `identities`, `attribution_candidates`, `attributions` | Instalaciones anónimas, unión de identidad y decisión versionada con evidencia |
+| Identidad y atribución | `installations`, `identities`, `attribution_rule_sets`, `attribution_candidates`, `attributions` | Instalaciones anónimas, reglas configurables, candidatos explicables y decisiones versionadas |
 | Actividad e ingresos | `events`, `sessions`, `purchases`, `subscriptions` | Recorrido posterior, dinero exacto y estados de suscripción |
 | Costes | `connector_accounts`, `connector_sync_runs`, `ad_costs` | Configuración sin secretos en claro, sincronizaciones y gasto diario |
 | Postbacks | `postback_destinations`, `postback_jobs`, `postback_attempts` | Mapeo y outbox reclamable de forma concurrente |
@@ -28,7 +28,9 @@ La fuente ejecutable son, en orden, las migraciones de `supabase/migrations/`. N
 - Los datos operativos son de solo lectura para miembros. La escritura de ingestión, rollups y jobs requiere `service_role`.
 - `public_sdk_keys` contiene límites de lote/cuerpo, plataformas, prefijos SDK y política de attestation. La clave se resuelve por SHA-256; el valor legible no se guarda.
 - `installations.installation_access_token_hash` protege la lectura puntual de atribución. `identities.identity_hash` evita conservar el identificador externo legible y `traits` pasa por la allowlist/antipII del Worker.
-- `resolve_ingest_app_key`, `read_sdk_attribution` e `ingest_sdk_messages` son `SECURITY INVOKER`, están revocadas para `public`, `anon` y `authenticated`, y solo se conceden a `service_role`.
+- `resolve_ingest_app_key`, `read_sdk_attribution` e `ingest_sdk_messages_v2` son `SECURITY INVOKER`, están revocadas para `public`, `anon` y `authenticated`, y solo se conceden a `service_role`.
+- Las atribuciones separan `acquisition` y `reengagement`, usan un `engagement_id` estable y guardan `match_type`, confianza, explicación, ventana en segundos, fecha y versión. Los nombres e IDs externos se copian en la decisión para que un cambio posterior de campaña no reescriba la historia.
+- Una sola regla puede estar activa por app. La coincidencia probabilística nace desactivada y el constraint exige base legal documentada antes de activarla.
 - Todas las claves externas tienen un índice con las columnas de la relación como prefijo. Esto evita búsquedas completas al unir, actualizar o borrar padres cuando crezcan las tablas de eventos.
 
 ## RLS

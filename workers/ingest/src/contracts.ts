@@ -21,6 +21,7 @@ export const appKeyConfigurationSchema = z
     allowedPlatforms: z.array(sdkPlatformSchema).min(1).max(2),
     attestationMode: z.enum(["off", "optional", "required"]),
     cacheTtlSeconds: z.number().int().min(5).max(300),
+    probabilisticEnabled: z.boolean(),
   })
   .strict();
 
@@ -36,6 +37,13 @@ const queuedBaseSchema = z.object({
   environment: sdkEnvironmentSchema,
   logicalOrigin: z.string().min(1).max(128),
   attestation: z.enum(["absent", "unverified", "verified"]),
+  probabilisticEvidence: z
+    .object({
+      networkPrefixHash: z.string().regex(/^[a-f0-9]{64}$/),
+      userAgentHash: z.string().regex(/^[a-f0-9]{64}$/),
+    })
+    .strict()
+    .optional(),
 });
 
 export const queuedIngestMessageSchema = z.discriminatedUnion("kind", [
@@ -76,6 +84,7 @@ export const persistenceResultSchema = z
     events: z.number().int().nonnegative(),
     installations: z.number().int().nonnegative(),
     identities: z.number().int().nonnegative(),
+    attributions: z.number().int().nonnegative(),
   })
   .strict();
 
