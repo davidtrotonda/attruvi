@@ -14,6 +14,7 @@ El objetivo es conectar campañas publicitarias con instalaciones, compras, ingr
 - Atribución de instalaciones y actividad posterior: sesiones, registro, compras, suscripciones, reembolsos y LTV observado.
 - Explorador anonimizado de usuarios con el recorrido clic → instalación → sesiones → ingresos → postbacks.
 - Medición de ingresos, ROAS, LTV y retención.
+- Importación de costes de Google Ads, Meta Ads y TikTok Ads, además de entrada diaria, por rango y CSV.
 - Postbacks server-side para Google Ads, Meta Ads y TikTok Ads.
 - Despliegue propio y trazabilidad completa de los datos.
 
@@ -51,6 +52,8 @@ La instalación y compatibilidad del SDK están en `packages/react-native/README
 La API pública del SDK, sus límites, OpenAPI, Cloudflare Queue, DLQ y prueba de carga están en `docs/INGEST_API.md` y `workers/ingest/openapi.yaml`.
 
 El orden de evidencia, la exactitud real por plataforma y la explicación de decisiones están en `docs/ATTRIBUTION.md`.
+
+La configuración, versiones oficiales, seguridad de tokens, sincronización incremental y formato CSV de los costes están en `docs/AD_COST_CONNECTORS.md`.
 
 ## Licencia
 

@@ -48,6 +48,22 @@ La landing de Next.js permanece en la raíz para conservar el proyecto y el domi
 4. Los jobs se reclaman con `FOR UPDATE SKIP LOCKED`; una llamada externa nunca mantiene abierta la transacción.
 5. Los errores recuperables pasan a reintento con backoff; los permanentes quedan auditados y visibles.
 
+## Costes publicitarios
+
+`packages/connectors` mantiene un contrato único para autorización, descubrimiento de cuentas, prueba de conexión, estado, paginación, lectura y normalización. Google Ads `v25`, Meta Marketing API `v26.0` y TikTok Marketing API `v1.3` son adaptadores independientes; el conector manual comparte el formato normalizado sin OAuth.
+
+```text
+OAuth server-side → cuenta publicitaria → secreto AES-GCM privado
+  → job diario por cuenta y rango UTC
+  → API paginada + backoff
+  → importe bigint + moneda original
+  → external_id de campaña/grupo/anuncio
+  ├─ match: jerarquía Attruvi
+  └─ sin match: bandeja Sin relacionar + asignación auditada
+```
+
+El cron únicamente programa cuentas que no han completado el día UTC y el worker reclama trabajos con `SKIP LOCKED`. El rango vuelve a leer tres días por defecto para absorber datos tardíos. `external_row_id` conserva idempotencia; una corrección actualiza la fila y aumenta su versión. No existe conversión implícita de divisa. Tokens y secretos de aplicación solo se descifran en servidor y nunca forman parte de las lecturas del dashboard.
+
 El Worker de enlaces resuelve destinos reales mediante una RPC exclusiva de `service_role`, sirve AASA/assetlinks y persiste lotes idempotentes desde Queue. El SDK React Native produce el contrato público completo. El Worker de ingestión fija `received_at` y `request_id`, entrega a Queue y persiste de forma idempotente instalaciones, identidades hasheadas, sesiones, eventos, compras, suscripciones y señales de atribución. La appKey es deliberadamente pública: su estado, ámbito y cuotas se validan, pero una lectura de atribución requiere además una prueba opaca propia de la instalación.
 
 ## Flujo específico de ingestión

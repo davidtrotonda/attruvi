@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { signOutAction } from "@/app/auth/actions";
 
-type DashboardSection = "apps" | "attribution" | "links" | "summary" | "users";
+type DashboardSection = "apps" | "attribution" | "costs" | "links" | "summary" | "users";
 
 export function DashboardShell({
   active,
@@ -64,6 +64,9 @@ export function DashboardShell({
             </Link>
             <Link className={active === "users" ? "active" : undefined} href="/dashboard/users">
               <span aria-hidden="true">⌁</span>Usuarios
+            </Link>
+            <Link className={active === "costs" ? "active" : undefined} href="/dashboard/costs">
+              <span aria-hidden="true">€</span>Costes
             </Link>
             <span className="dashboard-nav-disabled">
               <span aria-hidden="true">⇄</span>Postbacks <small>Próximamente</small>

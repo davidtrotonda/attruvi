@@ -423,7 +423,10 @@ $$;
 
 insert into public.ad_costs (
   id, organization_id, app_id, source_id, campaign_id, ad_group_id, ad_id,
-  cost_date, amount_minor, currency, impressions, clicks, external_row_id
+  provider, external_account_id, campaign_external_id, campaign_name,
+  ad_group_external_id, ad_group_name, ad_external_id, ad_name,
+  cost_date, amount_minor, currency, impressions, clicks, external_row_id,
+  external_entity_status, match_status
 )
 select
   ('d0000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
@@ -433,9 +436,17 @@ select
   ('40000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
   ('50000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
   ('60000000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid,
+  (case n when 1 then 'google_ads' when 2 then 'meta_ads' when 3 then 'tiktok_ads' else 'manual' end)::public.source_kind,
+  'demo-account-' || n,
+  'demo-campaign-' || n,
+  'Campaña demo ' || n,
+  'demo-group-' || n,
+  'Grupo demo ' || n,
+  'demo-ad-' || n,
+  'Anuncio demo ' || n,
   '2026-09-10'::date,
   case n when 1 then 3200 when 2 then 2500 when 3 then 1800 when 4 then 900 when 5 then 1200 else 0 end,
-  'EUR', 10000 * n, 100 * n, 'demo-cost-' || n
+  'EUR', 10000 * n, 100 * n, 'demo-cost-' || n, 'active', 'matched'
 from generate_series(1, 6) as series(n)
 on conflict do nothing;
 

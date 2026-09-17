@@ -110,3 +110,19 @@ Estado: aceptada. Compras, renovaciones y reembolsos son apuntes independientes 
 ## ADR-026 — Desinstalación siempre inferida
 
 Estado: aceptada. El SDK no puede declarar una desinstalación. Solo una invalidación persistente de token push, repetida y separada al menos 24 horas, crea una inferencia con evidencia y confianza. La interfaz usa siempre “inferida” y permite retractarla; no existe el estado “confirmada”.
+
+## ADR-027 — Versiones publicitarias fijadas
+
+Estado: aceptada. Google Ads usa `v25`, Meta Marketing API `v26.0` y TikTok Marketing API `v1.3`. Los endpoints, scopes, campos y paginación proceden de documentación oficial consultada durante la implementación. Una actualización requiere cambiar código, fixtures contractuales y documentación de forma explícita; nunca se adivinan campos ni se sigue una versión implícita.
+
+## ADR-028 — Tokens cifrados fuera del esquema expuesto
+
+Estado: aceptada. Los tokens OAuth se cifran en servidor mediante AES-256-GCM con una clave base64 de 32 bytes en `CONNECTOR_ENCRYPTION_KEY` y el ID de cuenta como datos autenticados adicionales. Postgres guarda ciphertext e IV en `private.connector_secrets`; las tablas públicas solo conservan referencia, caducidad y últimos cuatro caracteres de un identificador no sensible. Las RPC de secretos son exclusivas de `service_role` y ningún payload o token se registra.
+
+## ADR-029 — Gasto diario corregible y sin FX implícito
+
+Estado: aceptada. Cada fila usa unidades menores enteras, moneda original y una clave externa estable. La sincronización relee tres días por defecto; una corrección reemplaza la misma fila con versión creciente. Las monedas permanecen separadas hasta disponer de una fuente de cambio y fecha registradas. Una jerarquía desconocida entra en **Sin relacionar** y requiere match futuro o asignación manual auditada.
+
+## ADR-030 — RPC administrativas de costes con validación interna
+
+Estado: aceptada. `enqueue_connector_sync`, `upsert_manual_ad_costs` y `assign_ad_cost_campaign` son `SECURITY DEFINER` porque realizan operaciones atómicas a través de tablas operativas cerradas por RLS. Es deliberado que `authenticated` pueda invocarlas: fijan `search_path`, comprueban `auth.uid()` y rol owner/admin contra la organización derivada de la cuenta/app, revocan `public` y `anon`, y no confían en un `organization_id` del cliente. El asesor de Supabase las señala como advertencia genérica; las funciones de secretos, persistencia y scheduling siguen limitadas a `service_role`.

@@ -61,6 +61,7 @@ const requiredTables = [
   "connector_accounts",
   "connector_sync_runs",
   "ad_costs",
+  "ad_cost_mappings",
   "postback_destinations",
   "postback_jobs",
   "postback_attempts",
@@ -100,6 +101,19 @@ assert.match(migration, /revenue_reported_minor bigint/i);
 assert.match(migration, /revenue_verified_minor bigint/i);
 assert.match(migration, /unique \(app_id, transaction_id, event_type\)/i);
 assert.match(migration, /create or replace function public\.record_push_token_invalidation\(/i);
+assert.match(migration, /create or replace function public\.persist_ad_cost_page\(/i);
+assert.match(migration, /create or replace function public\.upsert_manual_ad_costs\(/i);
+assert.match(migration, /create or replace function public\.assign_ad_cost_campaign\(/i);
+assert.match(migration, /create or replace function public\.schedule_due_connector_syncs\(/i);
+assert.match(migration, /create or replace function public\.read_ad_cost_totals\(/i);
+assert.match(migration, /create or replace function private\.apply_ad_cost_mapping\(/i);
+assert.match(migration, /create table private\.connector_secrets\s*\(/i);
+assert.match(migration, /grant execute on function public\.store_connector_secret[\s\S]+to service_role/i);
+assert.match(migration, /create index connector_sync_runs_claim_idx/i);
+assert.match(migration, /create index if not exists ad_cost_mappings_account_fk_idx/i);
+assert.match(migration, /create index if not exists ad_cost_mappings_app_fk_idx/i);
+assert.match(migration, /create index if not exists ad_cost_mappings_created_by_fk_idx/i);
+assert.match(migration, /correction_version integer not null default 1/i);
 assert.match(migration, /create or replace function public\.attribute_installation\(/i);
 assert.match(migration, /create or replace function public\.get_attribution_explanation\(/i);
 assert.match(migration, /create or replace function public\.read_sdk_attribution\(/i);
@@ -118,7 +132,7 @@ assert.match(
   /revoke all on function public\.ensure_personal_workspace\(text\)[\s\S]+grant execute[\s\S]+to authenticated/i,
 );
 
-for (const source of ["google_ads", "meta_ads", "tiktok_ads", "affiliate", "influencer", "organic"]) {
+for (const source of ["google_ads", "meta_ads", "tiktok_ads", "manual", "affiliate", "influencer", "organic"]) {
   assert.match(seed, new RegExp(`'${source}'`, "i"), `el seed no contiene ${source}`);
 }
 
@@ -148,6 +162,9 @@ for (const proof of [
   "eventos fuera de orden",
   "monedas diferentes",
   "borrado de usuario",
+  "dato corregido posteriormente",
+  "campaña eliminada",
+  "monedas diferentes",
 ]) {
   assert.match(databaseTests, new RegExp(proof, "i"), `falta la prueba: ${proof}`);
 }
