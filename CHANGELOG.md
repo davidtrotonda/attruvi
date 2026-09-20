@@ -24,3 +24,4 @@ Todos los cambios relevantes de Attruvi se documentan aquí.
 - Seed de Auth con identidad de correo válida y campos no nulos para smoke tests SSR.
 - Logs estructurados de ingestión sin payloads sensibles.
 - Rotación de la clave server-side de Supabase en Vercel y Cloudflare, seguida de revocación de las claves sustituidas.
+- Configuración de compilación y desarrollo en Next.js con indicador explícito Webpack (`--webpack`) en `package.json`, evitando errores de resolución de Turbopack en entornos con enlaces simbólicos o junctions de disco.

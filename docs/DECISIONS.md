@@ -198,3 +198,8 @@ Estado: aceptada. El Worker reclama una clave de deduplicación antes de enviar 
 ## ADR-048 — Apps de validación aisladas e ingresos dirigidos por eventos
 
 Estado: aceptada. Tourixy, Solsuna, Rutimon y cualquier otro repositorio inspeccionado se usan exclusivamente como fixtures de compatibilidad del SDK y nunca como datos o proyectos incluidos en Attruvi. Cada organización registra sus propias apps. El camino principal de ingresos es `app cliente → SDK → evento purchase/suscripción/reembolso → atribución → métricas/postback`; App Store, Google Play o RevenueCat son verificadores opcionales y no requisitos para atribuir el importe reportado.
+
+## ADR-049 — Compilación Next.js mediante Webpack para compatibilidad con uniones y enlaces simbólicos
+
+Estado: aceptada. En entornos monorepo o instalaciones donde `node_modules` o workspaces utilizan uniones de directorio (junctions) o enlaces simbólicos de Windows hacia ubicaciones del sistema de archivos, Turbopack en Next.js 16 detiene la compilación por seguridad (`TurbopackInternalError: Symlink [project]/node_modules is invalid, it points out of the filesystem root`). Se configuran explícitamente `"build": "next build --webpack"` y `"dev": "next dev --webpack"` en `package.json` para garantizar compilaciones deterministas, verificación de tipos y generación estática completa (30/30 páginas) tanto en estaciones de trabajo locales como en entornos de CI/CD y Vercel.
+

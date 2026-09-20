@@ -8,9 +8,9 @@
   ],
   "scripts": {
     "predev": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors",
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "prebuild": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint src packages workers scripts next.config.ts eslint.config.mjs",
     "build:workspaces": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors && npm run build -w @attruvi/react-native && npm run build -w @attruvi/worker-links && npm run build -w @attruvi/worker-ingest",
