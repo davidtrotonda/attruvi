@@ -36,4 +36,11 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run verify
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Tests
+        run: npm run test
+      - name: Production builds
+        run: npm run build:all
