@@ -46,6 +46,11 @@ jobs:
         run: npm run build -w @attruvi/core && npm run build -w @attruvi/connectors
       - name: Web production build
         run: npm run build
+        env:
+          # Build-only public placeholders. Runtime deployments use provider-managed values.
+          NEXT_PUBLIC_SITE_URL: https://ci.attruvi.example
+          NEXT_PUBLIC_SUPABASE_URL: https://ci.supabase.example
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder_not_a_secret
       - name: React Native SDK build
         run: npm run build -w @attruvi/react-native
       - name: Links Worker build
