@@ -19,6 +19,7 @@ Todos los cambios relevantes de Attruvi se documentan aquí.
 
 ### Corregido
 
+- Generación explícita de tipos de rutas de Next.js antes de TypeScript, para que un clon nuevo no dependa de artefactos `.next` de una compilación anterior.
 - Finalización del onboarding para apps con iOS y Android: el guardado usa la restricción única explícita y admite reintentos sin duplicar la app ni sus plataformas.
 - Compatibilidad de Workers con las nuevas claves secretas de Supabase sin enviarlas como Bearer.
 - Replay reproducible de migraciones cuando el trigger automático de RLS ya existe en producción.

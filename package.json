@@ -16,7 +16,7 @@
     "lint": "eslint src packages workers scripts next.config.ts eslint.config.mjs",
     "build:workspaces": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors && npm run build -w @attruvi/react-native && npm run build -w @attruvi/worker-links && npm run build -w @attruvi/worker-ingest",
     "build:all": "npm run build && npm run build:workspaces",
-    "pretypecheck": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors",
+    "pretypecheck": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors && next typegen",
     "typecheck": "tsc --noEmit && npm run typecheck --workspaces --if-present",
     "pretest": "npm run build -w @attruvi/core",
     "test": "npm run test:web && npm run test --workspaces --if-present && npm run test:schema",
