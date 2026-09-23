@@ -14,6 +14,7 @@ Actualizado: 2026-09-17.
 - El onboarding de apps iOS/Android está corregido y verificado en producción: una repetición conserva una app y exactamente una plataforma por sistema operativo.
 - Vercel ejecuta costes a diario, métricas a diario, privacidad a diario y postbacks cada cinco minutos. Cloudflare tiene KV, Queue, DLQ, logs y trazas activos.
 - Escritorio y viewport móvil de 390 px pasan sin overflow ni errores de consola. La landing responde 200, el dominio raíz 308 y `/dashboard` sin sesión 307 hacia el acceso.
+- El traspaso a macOS es reproducible mediante `.nvmrc`, `docs/MACBOOK_SETUP.md` y `npm run bootstrap:macos`; GitHub conserva el código y los secretos permanecen en los almacenes de cada proveedor.
 
 La infraestructura principal está desplegada y es verificable, pero el producto **no se marca aún como listo para integrar en apps reales**: faltan verificadores activos de App Attest/Play Integrity, credenciales y aprobación de las redes, SMTP de producción, validación nativa iOS y revisión jurídica. El dominio de smart links sigue en `workers.dev` hasta que `attruvi.com` pueda asociarse a una zona de Cloudflare sin cambiar DNS ajeno.
 

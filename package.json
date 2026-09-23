@@ -7,6 +7,7 @@
     "workers/*"
   ],
   "scripts": {
+    "bootstrap:macos": "bash scripts/bootstrap-macos.sh",
     "predev": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors",
     "dev": "next dev --webpack",
     "prebuild": "npm run build -w @attruvi/core && npm run build -w @attruvi/connectors",

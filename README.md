@@ -51,6 +51,8 @@ npm run security:check
 
 Empieza por [`docs/START_HERE.md`](docs/START_HERE.md). La arquitectura y el estado real están en `docs/ARCHITECTURE.md` y `docs/BUILD_STATUS.md`.
 
+Para continuar el proyecto desde un Mac nuevo con Codex, sigue [`docs/MACBOOK_SETUP.md`](docs/MACBOOK_SETUP.md) o ejecuta `npm run bootstrap:macos` después de clonar.
+
 La instalación propia está en `docs/SELF_HOSTING.md`. La auditoría redactada y el modelo de amenazas están en `docs/SECURITY_AUDIT.md` y `docs/THREAT_MODEL.md`.
 
 El orden de despliegue, rollback, observabilidad y respuesta a incidentes está en `docs/PRODUCTION_RUNBOOK.md`.

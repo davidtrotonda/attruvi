@@ -43,6 +43,8 @@ npm run verify
 npm run security:check
 ```
 
+Si vas a cambiar de ordenador, `docs/MACBOOK_SETUP.md` contiene el proceso completo para macOS, Codex y el enlace seguro con los proyectos existentes.
+
 Carga secretos únicamente en Vercel, Supabase y Cloudflare. `supabase/seed.sql` contiene datos ficticios y solo se carga en demo/staging, nunca en producción.
 
 ## Qué funciona sin credenciales publicitarias

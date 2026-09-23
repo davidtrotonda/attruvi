@@ -1,3 +1,5 @@
+# Copia este archivo como .dev.vars solo para desarrollo local.
+# Nunca uses secretos de producción ni confirmes .dev.vars en Git.
 SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_SERVICE_ROLE_KEY=replace-with-local-service-role-key
 CLICK_HASH_SALT=replace-with-the-same-random-salt-used-by-the-links-worker

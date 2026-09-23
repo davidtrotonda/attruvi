@@ -6,6 +6,8 @@ Todos los cambios relevantes de Attruvi se documentan aquí.
 
 ### Añadido
 
+- Guía y bootstrap reproducible para continuar Attruvi desde macOS con Node 24, Codex y los proyectos cloud existentes, sin copiar secretos entre equipos.
+- Plantillas `.dev.vars.example` para ejecutar ambos Workers localmente sin publicar credenciales.
 - Endpoint público y no cacheable `/api/health` con release y request ID no sensibles.
 - Comprobación profunda `/api/health?deep=1` de los Workers de enlaces e ingestión, con timeout, latencia y resultado redactado.
 - Runbook reproducible de producción, rollback e incidentes.

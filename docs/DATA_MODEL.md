@@ -74,7 +74,9 @@ npx supabase db lint
 npx supabase migration list --local
 ```
 
-`db reset` recrea la base, aplica todas las migraciones por orden y carga `supabase/seed.sql`. Para un proyecto remoto, enlaza el proyecto correcto y revisa el plan antes de ejecutar `npx supabase db push`.
+`db reset` recrea la base, aplica todas las migraciones por orden y carga `supabase/seed.sql`.
+
+Los archivos locales son la fuente reproducible para bases nuevas. La instancia de producción existente recibió parte de sus migraciones mediante la API de Supabase, por lo que los identificadores de su historial remoto no siempre coinciden literalmente con los timestamps locales aunque el esquema aplicado sí proceda de estos archivos. No ejecutes `npx supabase db push` ni `migration repair` directamente contra producción para forzar una coincidencia. Valida cada migración nueva en local/staging, conserva el SQL versionado y aplícala explícitamente con Supabase MCP después de revisar advisors y pruebas.
 
 ## Revertir
 
