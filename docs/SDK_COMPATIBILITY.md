@@ -1,6 +1,6 @@
 # Compatibilidad del SDK React Native
 
-Actualizado: 2026-09-17.
+Matriz Android auditada: 2026-09-17. Validación iOS añadida: 2026-10-07.
 
 ## Manifiestos auditados
 
@@ -32,6 +32,11 @@ También se comprobaron los identificadores de plataforma y los esquemas de deep
 | Autolinking en proyecto limpio RN 0.87 con New Architecture | Android e iOS detectados desde el tarball |
 | Compilación Android RN 0.87 | superada en fixture y en el piloto aislado de Tourixy |
 | Compilación Android Expo 57 / RN 0.86.3 | superada dentro de Solsuna y Rutimon en worktrees efímeros |
-| Compilación iOS | no ejecutable desde Windows; podspec y fuentes se validan estáticamente |
+| SDK iOS para dispositivo ARM64, sin firma | PASS con RN 0.87 y RN 0.86.3 |
+| XCTest del SDK iOS en app anfitriona | 5/5 PASS, Keychain del simulador, RN 0.87 / iOS 26.5 |
+| Apps completas iOS para simulador | Tourixy, Solsuna y Rutimon PASS; ver informe de octubre |
+| Dispositivo físico y Universal Links | pendiente de iPhone, firma y asociaciones del dominio |
 
 La evidencia detallada, hashes de APK, referencias auditadas y límites de cada afirmación están en [`APP_COMPATIBILITY.md`](./APP_COMPATIBILITY.md). No se amplía el rango de compatibilidad hasta ejecutar esas mismas pruebas con otra versión.
+
+La evidencia iOS y los ajustes del entorno macOS están en [`IOS_VALIDATION_2026-10-07.md`](./IOS_VALIDATION_2026-10-07.md). Las versiones Expo instaladas en octubre son 57.0.24 para Solsuna y 57.0.26 para Rutimon; la tabla de manifiestos anterior corresponde a septiembre.

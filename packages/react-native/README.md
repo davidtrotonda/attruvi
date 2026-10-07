@@ -6,11 +6,11 @@ SDK abierto de Attruvi para relacionar instalaciones, sesiones, registros, compr
 
 | Aplicación auditada | Base | Arquitectura | Estado del SDK |
 |---|---|---|---|
-| Tourixy | React Native 0.87.0, React 19.2.8, Hermes | New Architecture | Android compilado en piloto aislado |
-| Solsuna | Expo 57, React Native 0.86.3 | New Architecture | Android compilado desde tarball local |
-| Rutimon | Expo 57, React Native 0.86.3 | New Architecture | Android compilado desde tarball local |
+| Tourixy | React Native 0.87.0, React 19.2.8, Hermes | New Architecture | Android compilado en piloto aislado; iOS compilado para simulador |
+| Solsuna | Expo 57, React Native 0.86.3 | New Architecture | Android compilado desde tarball local; iOS compilado para simulador |
+| Rutimon | Expo 57, React Native 0.86.3 | New Architecture | Android compilado desde tarball local; iOS compilado para simulador |
 
-El peer range inicial es `react-native >=0.86.3 <0.88`, definido y construido contra las apps objetivo. iOS sigue pendiente de compilación en macOS/Xcode. Consulta [`docs/APP_COMPATIBILITY.md`](../../docs/APP_COMPATIBILITY.md) para ver referencias, comandos, artefactos y límites exactos.
+El peer range inicial es `react-native >=0.86.3 <0.88`, definido y construido contra las apps objetivo. El SDK iOS compila para ARM64 sin firma con RN 0.87 y RN 0.86.3, y sus cinco pruebas XCTest pasan en simulador. La instalación firmada y los Universal Links en dispositivo físico siguen pendientes. Consulta [`docs/APP_COMPATIBILITY.md`](../../docs/APP_COMPATIBILITY.md) para ver referencias, comandos, artefactos y límites exactos.
 
 ## Instalación para personas
 

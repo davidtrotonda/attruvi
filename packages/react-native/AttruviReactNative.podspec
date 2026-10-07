@@ -19,4 +19,9 @@ Pod::Spec.new do |spec|
   else
     spec.dependency "React-Core"
   end
+
+  spec.test_spec "NativeTests" do |tests|
+    tests.source_files = "tests/ios/**/*.swift"
+    tests.requires_app_host = true
+  end
 end

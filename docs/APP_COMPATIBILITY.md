@@ -1,23 +1,27 @@
 # Compatibilidad con las aplicaciones objetivo
 
-Última validación: 17-09-2026. Esta matriz separa deliberadamente **inspeccionado**,
+Validación Android: 17-09-2026. Validación iOS: 07-10-2026, con evidencia en
+[`IOS_VALIDATION_2026-10-07.md`](./IOS_VALIDATION_2026-10-07.md).
+Esta matriz separa deliberadamente **inspeccionado**,
 **probado con fixture equivalente** y **compilado dentro de la app real**. Un manifiesto
 compatible no equivale a una compilación satisfactoria.
 
 Esta lista no es un catálogo de apps de Attruvi ni una precarga para cuentas nuevas. Son repositorios que el propietario autorizó usar como fixtures de compatibilidad. El producto sigue siendo multi-tenant: cada usuario registra una app externa propia e instala en ella el mismo SDK público.
 
-No se modificó ningún checkout ni rama de producción. Los identificadores de paquete,
+En septiembre se usaron fixtures aislados. En octubre se reutilizan los checkouts
+canónicos con cambios de CocoaPods temporales, preservando el trabajo local previo.
+Los identificadores de paquete,
 cuentas, proyectos y firma se comprobaron donde era necesario, pero se omiten de este
 documento público. No son secretos criptográficos, aunque tampoco son necesarios para
 reproducir la validación.
 
 ## Resultado ejecutivo
 
-| Objetivo | Referencia inspeccionada | Combinación | Android | iOS | Estado |
+| Objetivo | Referencia Android de septiembre | Combinación Android | Android | iOS de octubre | Estado |
 | --- | --- | --- | --- | --- | --- |
-| Tourixy | `origin/main` en `3d151dc60ef5a92f5fcbbe71934c18eb2614081f` | React Native 0.87.0 bare, React 19.2.8, New Architecture | App real piloto: PASS | Manifiesto revisado; no compilado | Compatible en Android; iOS pendiente de Xcode |
-| Solsuna | `origin/main` en `4369c84c49bd657af17fd9aac2eccdfc143282d6` | Expo SDK 57.0.21, React Native 0.86.3, React 19.2.3 | App real en worktree efímero: PASS | Restricciones revisadas; no compilado | Compatible en Android; iOS pendiente de Xcode |
-| Rutimon | línea activa más reciente en `272b1db4d12288ba3e4b336e873cb16f8bb93b94` | Expo SDK 57.0.23, React Native 0.86.3, React 19.2.3 | App real en worktree efímero: PASS | Restricciones revisadas; no compilado | Compatible en Android; iOS pendiente de Xcode |
+| Tourixy | `origin/main` en `3d151dc60ef5a92f5fcbbe71934c18eb2614081f` | React Native 0.87.0 bare, React 19.2.8, New Architecture | App real piloto: PASS | App completa para simulador: PASS | Compilación Android e iOS comprobada; dispositivo pendiente |
+| Solsuna | `origin/main` en `4369c84c49bd657af17fd9aac2eccdfc143282d6` | Expo SDK 57.0.21, React Native 0.86.3, React 19.2.3 | App real en worktree efímero: PASS | App completa para simulador: PASS | Compilación Android e iOS comprobada; dispositivo pendiente |
+| Rutimon | línea activa más reciente en `272b1db4d12288ba3e4b336e873cb16f8bb93b94` | Expo SDK 57.0.23, React Native 0.86.3, React 19.2.3 | App real en worktree efímero: PASS | App completa para simulador: PASS | Compilación Android e iOS comprobada; dispositivo pendiente |
 
 Expo SDK 57 usa React Native 0.86, Node 22.13 o superior, Android 7/API 24
 o superior con compile/target SDK 36 e iOS 16.4 o superior. Se tomó esta matriz
@@ -123,16 +127,19 @@ se instaló sobre una versión de producción.
 
 ## iOS: alcance exacto
 
-Se revisaron Podspec, deployment targets, entitlements y asociaciones. El Podspec de
-Attruvi declara iOS 15.1 y Swift 5.9, compatible en manifiesto con Tourixy; Expo SDK 57
-eleva sus aplicaciones a iOS 16.4 o superior. Este host es Windows y no dispone de
-Xcode, simulador, `pod install` ni firma Apple. Por tanto:
+La inspección del 17-09-2026 se hizo desde Windows y no incluía compilación iOS.
+El 07-10-2026 se ejecutó CocoaPods y Xcode 26.5 en macOS: el SDK RN 0.87 compila
+para dispositivo ARM64 sin firma con RN 0.87 y RN 0.86.3; Tourixy, Solsuna y Rutimon
+completan los builds de simulador; las cinco
+pruebas XCTest del SDK pasan en una app anfitriona con Keychain real del simulador.
+Los resultados de los fixtures Expo/RN 0.86.3 y sus referencias actuales están en
+el informe de octubre. El pod sigue declarando iOS 15.1 y Swift 5.9; Expo eleva el
+mínimo de sus apps a iOS 16.4.
 
-- **no** se afirma una compilación iOS;
-- el siguiente control obligatorio es `pod install`, build de simulator y build de
-  dispositivo en macOS/Xcode para cada combinación;
-- AASA, Associated Domains y apertura real deben verificarse en dispositivo, porque
-  una configuración correcta no demuestra que Apple haya servido la asociación.
+No hay un iPhone conectado ni identidades válidas de firma Apple en este Mac.
+AASA, Associated Domains y apertura real deben comprobarse en dispositivo. Además,
+las listas Apple/Android de `workers/links/src/association-config.ts` están vacías:
+la compilación del SDK no configura por sí sola las asociaciones del dominio.
 
 ## E2E sintético reproducible
 
@@ -166,14 +173,13 @@ reintento puede persistir el clic en lugar de perderlo silenciosamente.
 
 ## Pasos pendientes antes de producción
 
-1. Ejecutar las tres compilaciones iOS en macOS/Xcode y probar Universal Links en
-   dispositivo físico.
+1. Completar la instalación firmada y probar Universal Links en dispositivo físico;
+   consultar los resultados de compilación iOS en el informe de octubre.
 2. Revisar el piloto Tourixy y decidir el callback de compra autoritativo antes de
    emitir ingresos.
-3. Aplicar los cambios guiados a Solsuna y Rutimon en ramas nuevas, nunca sobre sus
-   checkouts productivos.
+3. Integrar las inicializaciones y los eventos del SDK en Solsuna y Rutimon cuando
+   se autorice esa instrumentación, preservando su trabajo existente.
 4. Sustituir la appKey pública de development por una emitida para cada app. No
    reutilizarla entre organizaciones ni entornos.
 5. Probar con endpoints de development y postbacks dry-run antes de habilitar un
    destino publicitario real.
-

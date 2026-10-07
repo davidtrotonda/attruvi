@@ -16,6 +16,7 @@ end
 
 target 'HelloWorld' do
   config = use_native_modules!
+  pod 'AttruviReactNative', :path => '../node_modules/@attruvi/react-native', :testspecs => ['NativeTests']
 
   use_react_native!(
     :path => config[:reactNativePath],

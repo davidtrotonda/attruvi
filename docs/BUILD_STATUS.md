@@ -1,6 +1,6 @@
 # Estado de construcción
 
-Actualizado: 2026-09-17.
+Estado operativo auditado: 2026-09-17. Validación SDK iOS: 2026-10-07.
 
 ## Estado operativo de la release
 
@@ -16,7 +16,7 @@ Actualizado: 2026-09-17.
 - Escritorio y viewport móvil de 390 px pasan sin overflow ni errores de consola. La landing responde 200, el dominio raíz 308 y `/dashboard` sin sesión 307 hacia el acceso.
 - El traspaso a macOS es reproducible mediante `.nvmrc`, `docs/MACBOOK_SETUP.md` y `npm run bootstrap:macos`; GitHub conserva el código y los secretos permanecen en los almacenes de cada proveedor.
 
-La infraestructura principal está desplegada y es verificable, pero el producto **no se marca aún como listo para integrar en apps reales**: faltan verificadores activos de App Attest/Play Integrity, credenciales y aprobación de las redes, SMTP de producción, validación nativa iOS y revisión jurídica. El dominio de smart links sigue en `workers.dev` hasta que `attruvi.com` pueda asociarse a una zona de Cloudflare sin cambiar DNS ajeno.
+La infraestructura principal está desplegada y es verificable, pero el producto **no se marca aún como listo para integrar en apps reales**: faltan verificadores activos de App Attest/Play Integrity, credenciales y aprobación de las redes, SMTP de producción, instalación iOS firmada/Universal Links en dispositivo y revisión jurídica. El dominio de smart links sigue en `workers.dev` hasta que `attruvi.com` pueda asociarse a una zona de Cloudflare sin cambiar DNS ajeno.
 
 ## Completado
 
@@ -102,7 +102,7 @@ La prueba de carga local más reciente aceptó 5.000/5.000 solicitudes con concu
 
 Los asesores remotos de Supabase no reportan claves externas sin índice ni nuevas alertas RLS, y no registran riesgos altos o críticos. Permanece una advertencia agrupada con 24 RPC autenticadas `SECURITY DEFINER`, todas con comprobación explícita de sesión/pertenencia, `search_path` fijado y justificación en `DECISIONS.md`; también aparecen índices aún “sin uso” porque la base está recién creada y el ajuste externo del pool de Auth.
 
-La fase del SDK superó TypeScript estricto, `npm pack`, 12 pruebas (incluido el E2E objetivo) y compilación Android arm64 con React Native 0.87/New Architecture. El tarball se compiló además dentro de Tourixy, Solsuna y Rutimon en ramas o worktrees aislados: Tourixy RN 0.87 bare, Solsuna Expo 57/RN 0.86.3 y Rutimon Expo 57/RN 0.86.3. La validación corrigió en el SDK el acceso Kotlin a `context.currentActivity`; no parcheó las apps para ocultar el problema. iOS sigue pendiente porque este host Windows no dispone de Xcode.
+La fase del SDK superó TypeScript estricto, `npm pack`, 12 pruebas (incluido el E2E objetivo) y compilación Android arm64 con React Native 0.87/New Architecture. El tarball se compiló además dentro de Tourixy, Solsuna y Rutimon en ramas o worktrees aislados: Tourixy RN 0.87 bare, Solsuna Expo 57/RN 0.86.3 y Rutimon Expo 57/RN 0.86.3. La validación corrigió en el SDK el acceso Kotlin a `context.currentActivity`; no parcheó las apps para ocultar el problema. El 07-10-2026 el SDK iOS compila para ARM64 sin firma con RN 0.87 y RN 0.86.3; las cinco pruebas XCTest de Keychain y del puente pasan en un simulador iOS 26.5. Los resultados de las apps completas y las incidencias del entorno están en `docs/IOS_VALIDATION_2026-10-07.md`. La instalación firmada y los Universal Links en dispositivo físico siguen pendientes.
 
 El E2E sintético enlaza un clic TikTok con Install Referrer, primera apertura, `sign_up`, compra de 49,90 EUR, coste de 10,00 EUR, CPI/CAC de 10,00 EUR, ROAS 4,99 y tres decisiones de postback: TikTok elegible en validación local, Google omitido sin click ID propio y Meta omitido sin `fbclid`. También cubre offline/reintento, duplicados, dos organizaciones, ausencia de consentimiento y fallos temporales. La matriz y hashes reproducibles están en `docs/APP_COMPATIBILITY.md`.
 
@@ -120,5 +120,5 @@ Nada de lo anterior se presenta como funcional hasta que se implemente y verifiq
 - Configurar un SMTP de producción para la verificación y recuperación por correo. Google Auth y las redirect URLs de Attruvi ya están activos en producción.
 - Asociar un dominio estable de Attruvi a los Workers cuando pueda hacerse sin mover ni alterar DNS ajeno; mientras tanto se usan las URLs `workers.dev` verificadas.
 - Añadir las asociaciones reales de cada app a `association-config.ts` y comprobar Universal Links/App Links en dispositivos.
-- Compilar y validar iOS en un host con Xcode; Android RN 0.87/New Architecture y los tres fixtures objetivo ya pasan.
+- Completar la instalación iOS firmada y los Universal Links en un iPhone real; SDK ARM64 y XCTest ya pasan en macOS/Xcode.
 - Añadir únicamente las credenciales publicitarias de `docs/AD_COST_CONNECTORS.md` y registrar las callbacks. El llavero de cifrado y `CRON_SECRET` ya están configurados en Vercel; no hay valores reales en el repositorio.

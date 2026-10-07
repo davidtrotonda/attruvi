@@ -23,6 +23,7 @@
     "dist",
     "ios",
     "src",
+    "tests/ios",
     "AttruviReactNative.podspec",
     "LICENSE",
     "README.md",
