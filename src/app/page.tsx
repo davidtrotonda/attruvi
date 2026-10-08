@@ -108,14 +108,13 @@ export default function Home() {
             Atribución móvil para React Native
           </p>
           <h1 className="reveal reveal-2">
-            Mide tus anuncios. Envía las conversiones.
-            <span> Reduce el coste por conversión.</span>
+            Mide y reduce el coste
+            <span> de tus anuncios.</span>
           </h1>
           <p className="hero-copy reveal reveal-3">
-            Attruvi conecta cada instalación, compra e ingreso con el anuncio que
-            lo generó. Después envía conversiones verificadas a Google Ads, Meta
-            Ads y TikTok Ads para optimizar tus campañas y reducir el coste por
-            resultado.
+            Mide qué anuncios generan ventas en tu aplicación. Después envía esas
+            conversiones a Google Ads, Meta Ads y TikTok Ads para optimizar tus
+            campañas y reducir el coste.
           </p>
           <div className="hero-actions reveal reveal-4">
             <a
